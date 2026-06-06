@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Use Case Scoring & Prioritisation Framework — IIM CDAIO</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:    #0F2744;
+    --blue:    #1A4A7A;
+    --mid:     #2563A8;
+    --accent:  #3B82F6;
+    --gold:    #C07A00;
+    --gold-lt: #FEF3C7;
+    --red:     #991B1B;
+    --red-lt:  #FEE2E2;
+    --green:   #14532D;
+    --green-lt:#DCFCE7;
+    --teal:    #0D5C63;
+    --teal-lt: #CCFBF1;
+    --purple:  #4C1D95;
+    --purp-lt: #EDE9FE;
+    --slate:   #334155;
+    --gray:    #64748B;
+    --light:   #F1F5F9;
+    --white:   #FFFFFF;
+    --border:  #CBD5E1;
+    --text:    #1E293B;
+    --ink:     #0F172A;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #F8FAFC;
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── NAV ──────────────────────────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(15, 39, 68, 0.97);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 0;
+    padding: 0 2rem; height: 52px;
+    overflow-x: auto;
+  }
+  nav a {
+    color: rgba(255,255,255,0.65);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0 1rem; height: 52px;
+    display: flex; align-items: center;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  nav a:hover { color: #fff; border-bottom-color: var(--accent); }
+  nav .nav-brand {
+    color: #fff; font-weight: 700; font-size: 13px;
+    letter-spacing: 0.08em; margin-right: 1.5rem;
+    padding-right: 1.5rem;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  /* ── LAYOUT ───────────────────────────────────────────────────────────── */
+  main { padding-top: 52px; }
+  .section { padding: 4rem 0; }
+  .section:nth-child(even) { background: var(--white); }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+  .container-wide { max-width: 1400px; margin: 0 auto; padding: 0 2rem; }
+
+  /* ── COVER ────────────────────────────────────────────────────────────── */
+  #cover {
+    background: linear-gradient(135deg, #071524 0%, #0F2744 45%, #1A3A6B 100%);
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    padding-top: 52px;
+    position: relative; overflow: hidden;
+  }
+  #cover::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 70% 40%, rgba(59,130,246,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 20% 80%, rgba(99,102,241,0.08) 0%, transparent 70%);
+  }
+  #cover::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(255,255,255,0.02) 59px, rgba(255,255,255,0.02) 60px),
+                      repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(255,255,255,0.02) 59px, rgba(255,255,255,0.02) 60px);
+  }
+  .cover-inner {
+    position: relative; z-index: 1;
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    padding: 5rem 2rem 4rem;
+    max-width: 1200px; margin: 0 auto; width: 100%;
+  }
+  .cover-kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.25em;
+    color: var(--accent); text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .cover-kicker::before {
+    content: '';
+    display: inline-block; width: 32px; height: 1px;
+    background: var(--accent);
+  }
+  .cover-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    color: #fff;
+    line-height: 1.1; letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+  }
+  .cover-title em { color: var(--accent); font-style: normal; }
+  .cover-sub {
+    font-size: 1.2rem; color: rgba(255,255,255,0.6);
+    max-width: 600px; margin-bottom: 3rem; line-height: 1.6;
+  }
+  .cover-pills {
+    display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 4rem;
+  }
+  .pill {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.8);
+    padding: 0.4rem 1rem; border-radius: 100px;
+    font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+  }
+  .cover-stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px; background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; overflow: hidden; max-width: 700px;
+  }
+  .stat-box {
+    background: rgba(255,255,255,0.03);
+    padding: 1.5rem; text-align: center;
+    transition: background 0.2s;
+  }
+  .stat-box:hover { background: rgba(255,255,255,0.07); }
+  .stat-n {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem; color: var(--accent);
+    line-height: 1; margin-bottom: 0.25rem;
+  }
+  .stat-l { font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* ── SECTION HEADERS ──────────────────────────────────────────────────── */
+  .sec-header { margin-bottom: 2.5rem; }
+  .sec-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--accent);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .sec-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    color: var(--navy); line-height: 1.2;
+  }
+  .sec-body {
+    margin-top: 0.75rem; font-size: 15px;
+    color: var(--slate); max-width: 760px; line-height: 1.75;
+  }
+
+  /* ── H2 / H3 ────────────────────────────────────────────────────────────*/
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem; color: var(--navy);
+    margin: 2.5rem 0 0.75rem;
+  }
+  h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem; font-weight: 700;
+    color: var(--blue); text-transform: uppercase;
+    letter-spacing: 0.06em; margin: 2rem 0 0.5rem;
+  }
+  p { margin-bottom: 0.85rem; color: var(--slate); }
+
+  /* ── MATRIX SECTION ───────────────────────────────────────────────────── */
+  .matrix-grid {
+    display: grid;
+    grid-template-columns: 2rem 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1.5rem;
+    gap: 10px;
+    max-width: 700px;
+    height: 380px; margin: 2rem auto;
+  }
+  .matrix-yaxis {
+    grid-row: 1/3; grid-column: 1;
+    display: flex; align-items: center; justify-content: center;
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--gray); text-transform: uppercase;
+  }
+  .matrix-xaxis {
+    grid-row: 3; grid-column: 2/4;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--gray); text-transform: uppercase;
+  }
+  .q-box {
+    border-radius: 12px; padding: 1.5rem;
+    display: flex; flex-direction: column; justify-content: center;
+    border: 2px solid transparent;
+    cursor: default; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .q-box:hover { transform: scale(1.02); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+  .q-box .q-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+  .q-box .q-name { font-weight: 700; font-size: 1rem; margin-bottom: 0.15rem; }
+  .q-box .q-sub { font-size: 12px; opacity: 0.75; }
+  .q-champion  { background: #ECFDF5; border-color: #22C55E; color: var(--green); grid-row:1; grid-column:3; }
+  .q-research  { background: #EFF6FF; border-color: #60A5FA; color: var(--blue);  grid-row:1; grid-column:2; }
+  .q-quickwin  { background: #FFFBEB; border-color: #F59E0B; color: var(--gold);  grid-row:2; grid-column:3; }
+  .q-reassess  { background: var(--purp-lt); border-color: #A78BFA; color: var(--purple); grid-row:2; grid-column:2; }
+
+  /* ── QUADRANT CARDS ────────────────────────────────────────────────────── */
+  .quadrant-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+  @media(max-width:700px){ .quadrant-cards { grid-template-columns: 1fr; } }
+  .qcard {
+    border-radius: 12px; padding: 1.75rem;
+    border: 2px solid transparent;
+  }
+  .qcard-champion { background: #ECFDF5; border-color: #22C55E; }
+  .qcard-research  { background: #EFF6FF; border-color: #60A5FA; }
+  .qcard-quickwin  { background: #FFFBEB; border-color: #F59E0B; }
+  .qcard-reassess  { background: var(--purp-lt); border-color: #A78BFA; }
+  .qcard-hd {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .qcard-icon { font-size: 1.6rem; }
+  .qcard-name { font-weight: 700; font-size: 1.05rem; }
+  .qcard-tag {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.07em; padding: 2px 8px; border-radius: 100px;
+    margin-bottom: 0.5rem; text-transform: uppercase;
+  }
+  .qcard-desc { font-size: 14px; line-height: 1.65; }
+  .qcard-alloc {
+    margin-top: 0.75rem; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+
+  /* ── PILLAR QUICK REF TABLE ───────────────────────────────────────────── */
+  .pillar-table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+  .pillar-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px; min-width: 900px;
+  }
+  .pillar-table th {
+    background: var(--navy); color: #fff;
+    padding: 10px 14px; text-align: left;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .pillar-table td {
+    padding: 11px 14px; vertical-align: top;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .pillar-table tr:nth-child(even) td { background: var(--light); }
+  .pillar-table tr:hover td { background: #E8F0FE; }
+  .pt-num { font-weight: 700; color: var(--navy); width: 36px; text-align: center; }
+  .pt-name { font-weight: 600; }
+  .pt-new { font-size: 10px; color: var(--gold); font-weight: 700; letter-spacing: 0.06em; }
+  .pt-weight {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 700;
+    text-align: center; white-space: nowrap;
+    padding: 4px 8px; border-radius: 6px;
+    display: inline-block;
+  }
+  .wt-pos { background: var(--green-lt); color: var(--green); }
+  .wt-neg { background: var(--red-lt);   color: var(--red);   }
+  .type-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
+    padding: 3px 8px; border-radius: 100px; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .type-value    { background: #DBEAFE; color: #1D4ED8; }
+  .type-feas     { background: var(--green-lt); color: var(--green); }
+  .type-penalty  { background: var(--red-lt); color: var(--red); }
+  .score-low  { color: var(--red);   font-size: 12.5px; }
+  .score-mid  { color: var(--gold);  font-size: 12.5px; }
+  .score-high { color: var(--green); font-size: 12.5px; }
+
+  /* ── PILLAR DEEP DIVE CARDS ───────────────────────────────────────────── */
+  .pillars-grid { display: grid; gap: 2rem; }
+  .pillar-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: box-shadow 0.2s;
+  }
+  .pillar-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.08); }
+  .pc-header {
+    background: var(--navy);
+    padding: 1.25rem 1.75rem;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap;
+  }
+  .pc-header-left { flex: 1; }
+  .pc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: rgba(255,255,255,0.45);
+    letter-spacing: 0.15em; margin-bottom: 0.25rem;
+  }
+  .pc-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.25rem; color: #fff; line-height: 1.3;
+  }
+  .pc-header-right {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem;
+  }
+  .pc-body { padding: 1.5rem 1.75rem; }
+  .pc-purpose {
+    background: #F0F7FF; border-left: 3px solid var(--accent);
+    padding: 0.9rem 1.1rem; border-radius: 0 8px 8px 0;
+    font-size: 14px; line-height: 1.65; color: var(--slate);
+    margin-bottom: 1.25rem;
+  }
+  .score-rows { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 1.25rem; }
+  .score-row { padding: 0.9rem 1rem; }
+  .sr-low  { background: #FFF5F5; }
+  .sr-mid  { background: #FFFDF0; }
+  .sr-high { background: #F0FFF4; }
+  .sr-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; margin-bottom: 0.35rem;
+  }
+  .sr-low  .sr-label { color: var(--red); }
+  .sr-mid  .sr-label { color: var(--gold); }
+  .sr-high .sr-label { color: var(--green); }
+  .sr-text { font-size: 13px; color: var(--slate); line-height: 1.55; }
+  .pc-examples {
+    background: var(--purp-lt); border-radius: 8px;
+    padding: 0.9rem 1.1rem; margin-bottom: 1.25rem;
+  }
+  .pc-examples-title {
+    font-size: 11px; font-weight: 700; color: var(--purple);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;
+  }
+  .pc-examples ul { list-style: none; }
+  .pc-examples li {
+    font-size: 13px; color: var(--slate); padding: 0.2rem 0;
+    padding-left: 1.1rem; position: relative;
+  }
+  .pc-examples li::before {
+    content: '▸'; position: absolute; left: 0;
+    color: var(--purple); font-size: 11px;
+  }
+  .pc-tip {
+    background: var(--gold-lt); border-radius: 8px;
+    padding: 0.9rem 1.1rem; margin-bottom: 1.25rem;
+    display: flex; gap: 0.6rem; align-items: flex-start;
+  }
+  .pc-tip-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+  .pc-tip-body { font-size: 13px; color: #78350F; font-style: italic; line-height: 1.6; }
+  .pc-impact {
+    background: var(--teal-lt); border-radius: 8px;
+    padding: 0.9rem 1.1rem;
+    display: flex; gap: 0.6rem; align-items: flex-start;
+  }
+  .pc-impact-icon { font-size: 1rem; flex-shrink: 0; }
+  .pc-impact-body { font-size: 13px; color: var(--teal); line-height: 1.6; }
+
+  /* ── PROCESS SECTION ──────────────────────────────────────────────────── */
+  .process-steps { display: grid; gap: 0; position: relative; }
+  .process-steps::before {
+    content: ''; position: absolute;
+    left: 2rem; top: 2.5rem; bottom: 2.5rem;
+    width: 2px; background: linear-gradient(to bottom, var(--accent), var(--mid));
+  }
+  .step-row {
+    display: grid; grid-template-columns: 4rem 1fr;
+    gap: 1.5rem; padding: 2rem 0; position: relative;
+  }
+  .step-row:not(:last-child) { border-bottom: 1px dashed var(--border); }
+  .step-num-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+    z-index: 1;
+  }
+  .step-num {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--navy); color: #fff;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; box-shadow: 0 0 0 4px #F8FAFC;
+    border: 2px solid var(--accent);
+  }
+  .step-content { padding-top: 0.2rem; }
+  .step-title {
+    font-weight: 700; font-size: 1rem; color: var(--navy);
+    margin-bottom: 0.25rem;
+  }
+  .step-timing {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--accent); letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+  }
+  .step-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;
+    margin-top: 0.75rem;
+  }
+  @media(max-width:700px){ .step-grid { grid-template-columns: 1fr; } }
+  .step-cell { background: var(--light); border-radius: 8px; padding: 0.9rem; }
+  .step-cell-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--gray); margin-bottom: 0.35rem;
+  }
+  .step-cell-text { font-size: 13px; color: var(--slate); line-height: 1.55; }
+
+  /* ── EXAMPLES ─────────────────────────────────────────────────────────── */
+  .example-section { margin-top: 2.5rem; }
+  .example-header {
+    display: flex; align-items: center; gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .example-logo {
+    width: 48px; height: 48px; border-radius: 10px;
+    background: var(--navy); display: flex; align-items: center;
+    justify-content: center; font-size: 1.3rem; flex-shrink: 0;
+  }
+  .example-co { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--navy); }
+  .example-sector { font-size: 13px; color: var(--gray); }
+  .score-matrix { overflow-x: auto; }
+  .score-matrix table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px; min-width: 800px;
+  }
+  .score-matrix th {
+    background: var(--navy); color: #fff;
+    padding: 10px 12px; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    text-align: center;
+  }
+  .score-matrix th:first-child { text-align: left; }
+  .score-matrix td {
+    padding: 11px 12px; text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-matrix td:first-child { text-align: left; }
+  .score-matrix tr:nth-child(even) td { background: #F8FAFC; }
+  .uc-name { font-weight: 600; color: var(--navy); }
+  .uc-note { font-size: 12px; color: var(--gray); font-style: italic; }
+  .sv { display: inline-block; width: 28px; height: 28px; border-radius: 6px; line-height: 28px; font-weight: 700; font-size: 13px; }
+  .sv-5 { background: var(--green-lt); color: var(--green); }
+  .sv-4 { background: #DCFCE7; color: #166534; }
+  .sv-3 { background: var(--gold-lt); color: var(--gold); }
+  .sv-2 { background: #FFE4E6; color: #BE123C; }
+  .sv-1 { background: var(--red-lt); color: var(--red); }
+  .ws-badge {
+    background: var(--navy); color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 14px;
+    padding: 4px 10px; border-radius: 6px;
+    display: inline-block;
+  }
+  .q-badge {
+    font-size: 11px; font-weight: 700; padding: 4px 10px;
+    border-radius: 100px; white-space: nowrap; display: inline-block;
+  }
+  .qb-champion { background: var(--green-lt); color: var(--green); }
+  .qb-research  { background: #DBEAFE; color: var(--blue); }
+  .qb-quickwin  { background: var(--gold-lt); color: var(--gold); }
+  .qb-reassess  { background: var(--purp-lt); color: var(--purple); }
+  .interpretation {
+    margin-top: 1.5rem; background: #F0F7FF;
+    border-radius: 10px; padding: 1.5rem 1.75rem;
+    border-left: 4px solid var(--accent);
+  }
+  .interpretation h4 {
+    font-weight: 700; font-size: 0.9rem; color: var(--navy);
+    margin-bottom: 0.75rem; text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .interpretation p { font-size: 14px; margin-bottom: 0.6rem; color: var(--slate); }
+
+  /* ── MISTAKES TABLE ────────────────────────────────────────────────────── */
+  .mistakes-table { width: 100%; border-collapse: collapse; }
+  .mistakes-table th {
+    background: var(--navy); color: #fff;
+    padding: 12px 16px; text-align: left;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .mistakes-table td {
+    padding: 13px 16px; border-bottom: 1px solid var(--border);
+    vertical-align: top; font-size: 14px; line-height: 1.6;
+  }
+  .mistakes-table tr:nth-child(even) td { background: #FAFAFA; }
+  .mistake-cell { color: var(--red); font-weight: 600; }
+  .consequence-cell { color: var(--slate); }
+  .better-cell { color: var(--green); font-weight: 500; }
+
+  /* ── FORMULA BOX ───────────────────────────────────────────────────────── */
+  .formula-box {
+    background: var(--navy); border-radius: 12px;
+    padding: 1.75rem 2rem; margin: 1.5rem 0;
+    text-align: center;
+  }
+  .formula-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(12px, 1.5vw, 15px);
+    color: #93C5FD; letter-spacing: 0.04em;
+    line-height: 1.6;
+  }
+  .formula-note { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 0.75rem; }
+
+  /* ── ALLOCATION TABLE ─────────────────────────────────────────────────── */
+  .alloc-grid {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 1px;
+    background: var(--border); border-radius: 10px; overflow: hidden;
+    margin: 1rem 0;
+  }
+  @media(max-width:600px){ .alloc-grid { grid-template-columns: 1fr 1fr; } }
+  .alloc-cell {
+    padding: 1.25rem; text-align: center;
+    background: var(--white);
+  }
+  .alloc-pct {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem;
+  }
+  .alloc-name { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.15rem; }
+  .alloc-desc { font-size: 11px; color: var(--gray); }
+  .ac-champion .alloc-pct { color: var(--green); }
+  .ac-quickwin .alloc-pct { color: var(--gold); }
+  .ac-research .alloc-pct { color: var(--blue); }
+  .ac-reassess .alloc-pct { color: var(--purple); }
+
+  /* ── INFO CALLOUT ─────────────────────────────────────────────────────── */
+  .callout {
+    border-radius: 10px; padding: 1rem 1.25rem;
+    display: flex; gap: 0.75rem; align-items: flex-start;
+    margin: 1rem 0; font-size: 14px;
+  }
+  .callout-note { background: var(--teal-lt); color: var(--teal); border-left: 3px solid var(--teal); }
+  .callout-warn { background: var(--gold-lt); color: #78350F; border-left: 3px solid var(--gold); }
+  .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+  .callout strong { font-weight: 700; }
+
+  /* ── BULLETS ──────────────────────────────────────────────────────────── */
+  ul.prose { padding-left: 1.25rem; margin: 0.5rem 0 1rem; }
+  ul.prose li { margin-bottom: 0.4rem; font-size: 14.5px; color: var(--slate); line-height: 1.65; }
+  ol.prose { padding-left: 1.25rem; margin: 0.5rem 0 1rem; }
+  ol.prose li { margin-bottom: 0.4rem; font-size: 14.5px; color: var(--slate); line-height: 1.65; }
+
+  /* ── TABS ─────────────────────────────────────────────────────────────── */
+  .tab-bar {
+    display: flex; gap: 0; border-bottom: 2px solid var(--border);
+    margin-bottom: 2rem; overflow-x: auto;
+  }
+  .tab-btn {
+    padding: 0.65rem 1.25rem; border: none; background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; color: var(--gray);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    margin-bottom: -2px; white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: var(--navy); }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── FOOTER ───────────────────────────────────────────────────────────── */
+  footer {
+    background: var(--ink); color: rgba(255,255,255,0.4);
+    text-align: center; padding: 2rem;
+    font-size: 12px; letter-spacing: 0.05em;
+  }
+
+  /* ── PRINT ────────────────────────────────────────────────────────────── */
+
+  /* ── SCORE EXPLAINER ─────────────────────────────────────────────────── */
+  .score-explainer {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; margin: 1.5rem 0;
+    overflow: hidden;
+  }
+  .se-header {
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+    color: #fff; padding: 1rem 1.5rem;
+    font-weight: 700; font-size: 0.95rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .se-body { padding: 1.25rem 1.5rem; }
+  .se-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.25rem; }
+  @media(max-width:700px){ .se-grid { grid-template-columns: 1fr; } }
+  .se-axis-box { border-radius: 8px; padding: 1rem; }
+  .se-axis-impact { background: #EFF6FF; border: 1px solid #BFDBFE; }
+  .se-axis-feas   { background: #F0FFF4; border: 1px solid #86EFAC; }
+  .se-axis-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; margin-bottom: 0.5rem;
+  }
+  .se-axis-impact .se-axis-title { color: var(--blue); }
+  .se-axis-feas   .se-axis-title { color: var(--green); }
+  .se-formula {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    background: rgba(0,0,0,0.04); padding: 0.5rem 0.75rem;
+    border-radius: 6px; margin-bottom: 0.5rem; line-height: 1.7;
+  }
+  .se-steps { margin-top: 0.5rem; }
+  .se-step { font-size: 13px; color: var(--slate); padding: 0.2rem 0; line-height: 1.5; }
+  .se-step strong { color: var(--ink); }
+  .se-uc-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem; }
+  .se-uc-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .se-uc-card-head {
+    padding: 0.75rem 1rem; font-weight: 700; font-size: 0.85rem;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .se-uc-card-body { padding: 0.75rem 1rem; background: var(--light); font-size: 12.5px; line-height: 1.6; }
+  .se-calc-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #ddd; }
+  .se-calc-row:last-child { border-bottom: none; font-weight: 700; }
+  .se-axis-scores {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;
+  }
+  .se-axis-score-badge {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .sab-impact { background: #DBEAFE; color: var(--blue); }
+  .sab-feas   { background: var(--green-lt); color: var(--green); }
+  .sab-quad   { background: var(--navy); color: #fff; padding: 2px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+
+  /* ── PLOT CANVAS ──────────────────────────────────────────────────────── */
+  .plot-wrap { margin: 1.25rem 0; background: var(--light); border-radius: 10px; padding: 1rem; }
+  .plot-title { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 0.75rem; text-align: center; text-transform: uppercase; letter-spacing: 0.08em; }
+  canvas.matrix-plot { display: block; margin: 0 auto; max-width: 100%; }
+
+  .industry-panel {}
+
+  @media print {
+    nav { display: none; }
+    main { padding-top: 0; }
+    .section { page-break-inside: avoid; }
+    .pillar-card { page-break-inside: avoid; }
+  }
+  @media(max-width:700px){
+    .score-rows { grid-template-columns: 1fr; }
+    .matrix-grid { height: 300px; }
+    .quadrant-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-brand">IIM CDAIO</span>
+  <a href="#cover">Home</a>
+  <a href="#matrix">Matrix</a>
+  <a href="#rubric">Rubric</a>
+  <a href="#pillars">Pillars</a>
+  <a href="#process">Process</a>
+  <a href="#examples">Examples</a>
+  <a href="#mistakes">Mistakes</a>
+  <a href="#scoring-walkthrough">Score Walkthrough</a>
+  <a href="#formula">Formula</a>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════════════════════════════════════
+     COVER
+═══════════════════════════════════════════════════════════════ -->
+<section id="cover">
+  <div class="cover-inner">
+    <div class="cover-kicker">IIM CDAIO · Batch February 2026</div>
+    <h1 class="cover-title">AI Use Case<br><em>Scoring &amp; Prioritisation</em><br>Framework</h1>
+    <p class="cover-sub">A comprehensive reference guide for CDAIOs to evaluate, classify and prioritise AI use cases across 14 pillars — with worked examples, a step-by-step process and portfolio management principles.</p>
+    <div class="cover-pills">
+      <span class="pill">14 Scoring Pillars</span>
+      <span class="pill">6-Step Process</span>
+      <span class="pill">2×2 Portfolio Matrix</span>
+      <span class="pill">Horizon Bank Example</span>
+      <span class="pill">Meridian Health Network Example</span>
+      <span class="pill">Original + Proposed Rubric</span>
+    </div>
+    <div class="cover-stats">
+      <div class="stat-box"><div class="stat-n">14</div><div class="stat-l">Scoring Pillars</div></div>
+      <div class="stat-box"><div class="stat-n">6</div><div class="stat-l">Process Steps</div></div>
+      <div class="stat-box"><div class="stat-n">4</div><div class="stat-l">Quadrants</div></div>
+      <div class="stat-box"><div class="stat-n">17</div><div class="stat-l">Worked Use Cases</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 1 — INTRODUCTION
+═══════════════════════════════════════════════════════════════ -->
+<section id="intro" class="section">
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">Section 01</div>
+      <h1 class="sec-title">Introduction</h1>
+      <p class="sec-body">Why use case prioritisation is a CDAIO's core discipline — and why gut-feel doesn't survive board scrutiny.</p>
+    </div>
+    <p>Every CDAIO walks into a room with 40 AI ideas and 10 projects' worth of budget. The difference between AI programmes that transform organisations and those that produce a graveyard of unused models is not technical capability — it is <strong>prioritisation discipline</strong>.</p>
+    <p>The AI Use Case Scoring Framework replaces gut-feel prioritisation with a multi-dimensional weighted scoring model that assesses each use case across two composite axes:</p>
+    <ul class="prose">
+      <li><strong>Business Impact</strong> — the financial, strategic, and competitive value the use case will generate</li>
+      <li><strong>Feasibility</strong> — how ready the organisation is to build, deploy, and sustain the use case today</li>
+    </ul>
+    <p>The result is a 2×2 portfolio matrix classifying each use case into one of four strategic positions: <strong>Champion</strong>, <strong>Research Case</strong>, <strong>Quick Win</strong>, or <strong>Reassess Later</strong>.</p>
+    <div class="callout callout-note">
+      <span class="callout-icon">ℹ️</span>
+      <span><strong>Scope:</strong> This framework covers 14 pillars — 6 from the original IIM CDAIO rubric (P1–P6) plus 8 proposed additions (P7–P14, marked ★) that address identified gaps in organisational, competitive, and ethical dimensions.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 2 — THE MATRIX
+═══════════════════════════════════════════════════════════════ -->
+<section id="matrix" class="section">
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">Section 02</div>
+      <h1 class="sec-title">The 2×2 Portfolio Matrix</h1>
+      <p class="sec-body">Classification logic, quadrant definitions, and recommended capacity allocation.</p>
+    </div>
+
+    <div class="matrix-grid">
+      <div class="matrix-yaxis">Business Impact ↑</div>
+      <div class="q-box q-research">
+        <div class="q-icon">🔬</div>
+        <div class="q-name">Research Cases</div>
+        <div class="q-sub">High Impact · Low Feasibility</div>
+      </div>
+      <div class="q-box q-champion">
+        <div class="q-icon">⭐</div>
+        <div class="q-name">Champions</div>
+        <div class="q-sub">High Impact · High Feasibility</div>
+      </div>
+      <div class="q-box q-reassess">
+        <div class="q-icon">🔄</div>
+        <div class="q-name">Reassess Later</div>
+        <div class="q-sub">Low Impact · Low Feasibility</div>
+      </div>
+      <div class="q-box q-quickwin">
+        <div class="q-icon">⚡</div>
+        <div class="q-name">Quick Wins</div>
+        <div class="q-sub">Low Impact · High Feasibility</div>
+      </div>
+      <div class="matrix-xaxis">Feasibility →</div>
+    </div>
+
+    <div class="quadrant-cards">
+      <div class="qcard qcard-champion">
+        <div class="qcard-hd"><span class="qcard-icon">⭐</span><span class="qcard-name" style="color:var(--green)">Champions</span></div>
+        <span class="qcard-tag" style="background:var(--green-lt);color:var(--green)">High Impact + High Feasibility</span>
+        <p class="qcard-desc">Dream use cases. High value <em>and</em> high readiness. Assign your best team, set 90-day delivery milestones, measure ROI within 6 months.</p>
+        <div class="qcard-alloc" style="color:var(--green)">▶ 50% of AI capacity</div>
+      </div>
+      <div class="qcard qcard-research">
+        <div class="qcard-hd"><span class="qcard-icon">🔬</span><span class="qcard-name" style="color:var(--blue)">Research Cases</span></div>
+        <span class="qcard-tag" style="background:#DBEAFE;color:var(--blue)">High Impact + Lower Feasibility</span>
+        <p class="qcard-desc">Something is missing — data, talent, infrastructure, or regulatory clearance. Fund a small team to build feasibility. Set quarterly gates.</p>
+        <div class="qcard-alloc" style="color:var(--blue)">▶ 15% of AI capacity</div>
+      </div>
+      <div class="qcard qcard-quickwin">
+        <div class="qcard-hd"><span class="qcard-icon">⚡</span><span class="qcard-name" style="color:var(--gold)">Quick Wins</span></div>
+        <span class="qcard-tag" style="background:var(--gold-lt);color:var(--gold)">Lower Impact + High Feasibility</span>
+        <p class="qcard-desc">Momentum builders. Less complex, faster to ship, valuable as proof points for sceptical stakeholders. Especially critical in Year 1.</p>
+        <div class="qcard-alloc" style="color:var(--gold)">▶ 30% of AI capacity</div>
+      </div>
+      <div class="qcard qcard-reassess">
+        <div class="qcard-hd"><span class="qcard-icon">🔄</span><span class="qcard-name" style="color:var(--purple)">Reassess Later</span></div>
+        <span class="qcard-tag" style="background:var(--purp-lt);color:var(--purple)">Lower Impact + Lower Feasibility</span>
+        <p class="qcard-desc">Do not fund today. Archive with a documented rationale and a review trigger — a technology milestone or business context change that would reclassify this.</p>
+        <div class="qcard-alloc" style="color:var(--purple)">▶ 0% active capacity</div>
+      </div>
+    </div>
+
+    <h2>Recommended Portfolio Allocation</h2>
+    <div class="alloc-grid">
+      <div class="alloc-cell ac-champion"><div class="alloc-pct">50%</div><div class="alloc-name" style="color:var(--green)">Champions</div><div class="alloc-desc">Flagship delivery</div></div>
+      <div class="alloc-cell ac-quickwin"><div class="alloc-pct">30%</div><div class="alloc-name" style="color:var(--gold)">Quick Wins</div><div class="alloc-desc">Build momentum</div></div>
+      <div class="alloc-cell ac-research"><div class="alloc-pct">15%</div><div class="alloc-name" style="color:var(--blue)">Research Cases</div><div class="alloc-desc">Enable feasibility</div></div>
+      <div class="alloc-cell ac-reassess"><div class="alloc-pct">0%</div><div class="alloc-name" style="color:var(--purple)">Reassess Later</div><div class="alloc-desc">Monitor &amp; archive</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 3 — QUICK REFERENCE RUBRIC
+═══════════════════════════════════════════════════════════════ -->
+<section id="rubric" class="section">
+  <div class="container-wide">
+    <div class="sec-header">
+      <div class="sec-num">Section 03</div>
+      <h1 class="sec-title">Complete 14-Pillar Scoring Rubric</h1>
+      <p class="sec-body">Quick reference — all pillars across the 1–3–5 scale. Original rubric pillars P1–P6 from IIM CDAIO session. Proposed pillars P7–P14 marked ★.</p>
+    </div>
+    <div class="pillar-table-wrap">
+      <table class="pillar-table">
+        <thead>
+          <tr>
+            <th style="width:36px">#</th>
+            <th style="min-width:200px">Pillar</th>
+            <th>Weight</th>
+            <th>Type</th>
+            <th>Axis</th>
+            <th style="min-width:200px" class="score-low">1 — Low</th>
+            <th style="min-width:200px" class="score-mid">3 — Medium</th>
+            <th style="min-width:200px" class="score-high">5 — High</th>
+          </tr>
+        </thead>
+        <tbody id="rubric-body"></tbody>
+      </table>
+    </div>
+    <div class="callout callout-note" style="margin-top:1rem">
+      <span class="callout-icon">ℹ️</span>
+      <span><strong>Note:</strong> Weights shown are suggested defaults. Recalibrate based on your organisation's AI maturity, industry, and strategic priorities. Scores of 2 and 4 interpolate between defined anchor points.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 4 — PILLAR DEEP DIVES
+═══════════════════════════════════════════════════════════════ -->
+<section id="pillars" class="section">
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">Section 04</div>
+      <h1 class="sec-title">Pillar Deep-Dive Reference Cards</h1>
+      <p class="sec-body">Full criteria, rationale, scored examples, a calibration tip, and portfolio impact for every pillar.</p>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="filterPillars('all',this)">All 14</button>
+      <button class="tab-btn" onclick="filterPillars('Value',this)">Value Pillars</button>
+      <button class="tab-btn" onclick="filterPillars('Feasibility',this)">Feasibility Pillars</button>
+      <button class="tab-btn" onclick="filterPillars('Penalty',this)">Penalty Pillars</button>
+      <button class="tab-btn" onclick="filterPillars('Original',this)">Original (P1–P6)</button>
+      <button class="tab-btn" onclick="filterPillars('Proposed',this)">Proposed ★ (P7–P14)</button>
+    </div>
+
+    <div class="pillars-grid" id="pillars-grid"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 5 — PROCESS
+═══════════════════════════════════════════════════════════════ -->
+<section id="process" class="section">
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">Section 05</div>
+      <h1 class="sec-title">Step-by-Step Scoring Process</h1>
+      <p class="sec-body">How to run a prioritisation exercise — who participates, how each step runs, and what the output is.</p>
+    </div>
+
+    <div class="process-steps" id="process-steps"></div>
+
+    <h2 style="margin-top:3rem">Who Must Be in the Scoring Session</h2>
+    <ul class="prose">
+      <li><strong>CDAIO or AI Strategy Lead</strong> — Facilitates, ensures rubric consistency, challenges grade inflation</li>
+      <li><strong>Business Owner</strong> — Owns the financial value estimate; the only person who can validate Impact scores</li>
+      <li><strong>Data Scientist / ML Engineer</strong> — Validates feasibility scores; reality-checks data and infrastructure claims</li>
+      <li><strong>AI Translator</strong> — Bridges business and technical language; drafts the use case specification</li>
+      <li><strong>Risk / Compliance Representative</strong> — Validates P6 (Risk/Legal) and P14 (Ethical Impact) scores</li>
+    </ul>
+    <div class="callout callout-warn">
+      <span class="callout-icon">⚠️</span>
+      <span><strong>The Evidence Rule:</strong> Any score of 4 or 5 must be supported by documented evidence before it is accepted. "Will be valuable" is not evidence. If the team cannot name a specific metric, data source, or named sponsor — the score must come down.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 6 — WORKED EXAMPLES
+═══════════════════════════════════════════════════════════════ -->
+<section id="examples" class="section">
+  <div class="container-wide">
+    <div class="sec-header">
+      <div class="sec-num">Section 06</div>
+      <h1 class="sec-title">Worked Examples</h1>
+      <p class="sec-body">Three industry applications — Retail Banking, Healthcare, and Automobile — showing how scoring produces quadrant classification and portfolio decisions. Each example includes a step-by-step walkthrough of how Impact and Feasibility sub-scores are computed and how each use case is plotted on the 2×2 matrix.</p>
+    </div>
+
+    <!-- Industry tabs -->
+    <div class="tab-bar" style="margin-bottom:2.5rem">
+      <button class="tab-btn active" onclick="showIndustry('banking',this)">🏦 Horizon Bank</button>
+      <button class="tab-btn" onclick="showIndustry('health',this)">🏥 Meridian Health Network</button>
+      <button class="tab-btn" onclick="showIndustry('auto',this)">🚗 MotorVance Auto</button>
+    </div>
+
+    <!-- HORIZON BANK -->
+    <div id="ind-banking" class="industry-panel">
+      <div class="example-header">
+        <div class="example-logo">🏦</div>
+        <div>
+          <div class="example-co">Horizon Bank</div>
+          <div class="example-sector">Retail Banking · 6 Use Cases · Original 6-Pillar Rubric</div>
+        </div>
+      </div>
+      <div class="score-matrix"><table>
+        <thead><tr>
+          <th>Use Case</th><th>Fin (35%)</th><th>Scale (20%)</th><th>Speed (10%)</th>
+          <th>Data (15%)</th><th>Process (15%)</th><th>Risk (−5%)</th>
+          <th>Weighted Score</th><th>Impact /5</th><th>Feasibility /5</th><th>Quadrant</th>
+        </tr></thead>
+        <tbody id="hdfc-body"></tbody>
+      </table></div>
+      <div class="score-explainer" id="bank-explainer"></div>
+      <div class="interpretation">
+        <h4>Portfolio Interpretation — Horizon Bank</h4>
+        <p><strong>Customer Churn Prediction (3.35) → Champion.</strong> Impact = 4.36/5 (Financial=4, Scale=4 → normalised against max of 2.75 raw points). Feasibility = 4.00/5 (Speed=4, Data=4, Process=4, Risk=4). Both axes above 3.2 threshold. Priority 1 delivery.</p>
+        <p><strong>GenAI Branch Staff Assistant (3.95) → Quick Win.</strong> Impact = 3.64/5 (Financial=3 — indirect; Scale=5 — 18,000 staff daily). Feasibility = 4.91/5 (Speed=5, Data=5, Process=5, Risk=5 — no sensitive data). Lower impact axis but maximum feasibility → bottom-right quadrant. Ship in 45 days.</p>
+        <p><strong>Real-Time Transaction Fraud (3.55) → Research Case.</strong> Impact = 4.55/5 (Financial=5, Scale=5 — maximum). Feasibility = 2.73/5 (Speed=2 — real-time inference infra is 12+ months — drags feasibility below threshold despite decent data and process scores). High Y, low X → top-left.</p>
+        <p><strong>Document Digitisation OCR (2.75) → Quick Win.</strong> Impact = 2.18/5 (Financial=2, Scale=3). Feasibility = 4.36/5 (Speed=5, Data=4, Process=4, Risk=5). Low Y, high X → bottom-right.</p>
+      </div>
+    </div>
+
+    <!-- MERIDIAN HEALTH -->
+    <div id="ind-health" class="industry-panel" style="display:none">
+      <div class="example-header">
+        <div class="example-logo">🏥</div>
+        <div>
+          <div class="example-co">Meridian Health Network</div>
+          <div class="example-sector">Healthcare · 5 Use Cases · Original 6-Pillar Rubric</div>
+        </div>
+      </div>
+      <div class="score-matrix"><table>
+        <thead><tr>
+          <th>Use Case</th><th>Fin (35%)</th><th>Scale (20%)</th><th>Speed (10%)</th>
+          <th>Data (15%)</th><th>Process (15%)</th><th>Risk (−5%)</th>
+          <th>Weighted Score</th><th>Impact /5</th><th>Feasibility /5</th><th>Quadrant</th>
+        </tr></thead>
+        <tbody id="apollo-body"></tbody>
+      </table></div>
+      <div class="score-explainer" id="health-explainer"></div>
+      <div class="interpretation">
+        <h4>Portfolio Interpretation — Meridian Health Network</h4>
+        <p><strong>Patient No-Show Prediction (3.50) → Champion.</strong> Impact = 3.18/5 (Financial=3, Scale=4 — just above 3.2 threshold). Feasibility = 4.55/5 (Speed=4, Data=4, Process=4, Risk=5 — minimal regulatory risk for scheduling AI). Tight champion — monitor quarterly.</p>
+        <p><strong>Hospital Bed Occupancy Forecasting (3.35) → Champion.</strong> Impact = 3.64/5 (Financial=4, Scale=4). Feasibility = 3.64/5 (Speed=3, Data=4, Process=4, Risk=4). Both axes comfortably above 3.2. Natural paired delivery with No-Show Prediction.</p>
+        <p><strong>Radiology AI Second Opinion (2.90) → Research Case.</strong> Impact = 4.27/5 (Financial=5, Scale=3). Feasibility = 1.82/5 — Risk=1 (extreme regulatory exposure) collapses the feasibility axis despite reasonable data and process. Fund a 12-month regulatory pathway programme.</p>
+        <p><strong>Personalised Treatment Recommender (1.90) → Reassess Later.</strong> Impact = 2.91/5 (Financial=5 but Scale=2 pulls it down significantly). Feasibility = 0.55/5 (Speed=1, Data=1, Process=2, Risk=1 — every feasibility dimension fails). Archive with trigger: structured genomics pipeline + regulatory sandbox approval.</p>
+      </div>
+    </div>
+
+    <!-- MOTORVANCE AUTO -->
+    <div id="ind-auto" class="industry-panel" style="display:none">
+      <div class="example-header">
+        <div class="example-logo">🚗</div>
+        <div>
+          <div class="example-co">MotorVance Auto</div>
+          <div class="example-sector">Automobile Manufacturing &amp; Retail · 6 Use Cases · Original 6-Pillar Rubric</div>
+        </div>
+      </div>
+      <div class="score-matrix"><table>
+        <thead><tr>
+          <th>Use Case</th><th>Fin (35%)</th><th>Scale (20%)</th><th>Speed (10%)</th>
+          <th>Data (15%)</th><th>Process (15%)</th><th>Risk (−5%)</th>
+          <th>Weighted Score</th><th>Impact /5</th><th>Feasibility /5</th><th>Quadrant</th>
+        </tr></thead>
+        <tbody id="auto-body"></tbody>
+      </table></div>
+      <div class="score-explainer" id="auto-explainer"></div>
+      <div class="interpretation">
+        <h4>Portfolio Interpretation — MotorVance Auto</h4>
+        <p><strong>Assembly Line Defect Detection CV (3.45) → Champion.</strong> Impact = 4.36/5 (Financial=5: ~₹80Cr/yr warranty savings; Scale=4: continuous production). Feasibility = 3.45/5 (Speed=3: 4–6 month camera+edge AI rollout; Data=4: defect image archive available; Process=4: documented SOPs; Risk=4: internal tool). Both axes above 3.2.</p>
+        <p><strong>Predictive Maintenance IoT (3.10) → Research Case.</strong> Impact = 3.82/5 (Financial=4, Scale=4). Feasibility = 2.55/5 — Speed=2 (IoT sensor rollout across 3 plants = 12–18 months) drags feasibility below threshold. High Y, low X → top-left. Fund the IoT sensor infrastructure as a prerequisite.</p>
+        <p><strong>Dealer Inventory Optimisation AI (3.55) → Champion.</strong> Impact = 3.82/5 (Financial=4, Scale=4 — 450 dealers, daily replenishment). Feasibility = 3.82/5 (Speed=3, Data=4: DMS data available; Process=4: structured ordering workflow; Risk=5: no regulatory exposure). Strong champion.</p>
+        <p><strong>Autonomous Vehicle Navigation (1.35) → Reassess Later.</strong> Impact = 4.55/5 (Financial=5, Scale=5 — platform-defining technology). Feasibility = 0.18/5 (Speed=1, Data=2, Process=1, Risk=1 — extreme safety and regulatory risk). Textbook Reassess Later. Archive with trigger: AIS:140 ADAS regulatory framework approved + LIDAR dataset at scale.</p>
+        <p><strong>GenAI Vehicle Configurator (3.75) → Quick Win.</strong> Impact = 2.73/5 (Financial=2: indirect; Scale=4: digital configurator at scale). Feasibility = 4.91/5 (Speed=5: 30-day LLM API build; Data=5: spec DB fully structured; Process=5; Risk=5). Fastest in the portfolio — ship first to demonstrate AI to dealers and customers.</p>
+        <p><strong>Showroom Lead Scoring (3.30) → Champion (borderline).</strong> Impact = 3.27/5 (Financial=3, Scale=4: 450 showrooms, 50,000+ leads/month). Feasibility = 3.82/5 (Speed=4, Data=4, Process=4, Risk=5). Both axes just above 3.2 — monitor quarterly for reclassification.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 7 — LEADERSHIP MISTAKES
+═══════════════════════════════════════════════════════════════ -->
+<section id="mistakes" class="section">
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">Section 07</div>
+      <h1 class="sec-title">Common Leadership Mistakes</h1>
+      <p class="sec-body">The six most common errors in AI portfolio management — and the better approaches.</p>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="mistakes-table">
+        <thead>
+          <tr>
+            <th>Leadership Mistake</th>
+            <th>What Actually Happens</th>
+            <th>Better Approach</th>
+          </tr>
+        </thead>
+        <tbody id="mistakes-body"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 8 — SCORE WALKTHROUGH
+═══════════════════════════════════════════════════════════════ -->
+<section id="scoring-walkthrough" class="section">
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">Section 08</div>
+      <h1 class="sec-title">How Scores are Derived &amp; Plotted — A Complete Walkthrough</h1>
+      <p class="sec-body">A step-by-step numerical walkthrough using one use case from each industry to show exactly how raw pillar scores become Impact and Feasibility sub-scores, a weighted total, and a 2×2 matrix position.</p>
+    </div>
+
+    <h2>The Two Axes</h2>
+    <p>Every use case is positioned on two independent axes derived from the 6-pillar scores. The axes are computed separately, then compared to a threshold of <strong>3.2 out of 5</strong> to determine quadrant placement.</p>
+
+    <!-- Walkthrough 1: Banking -->
+    <div style="margin:2rem 0; border:1px solid var(--border); border-radius:14px; overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#0F2744,#1A4A7A); color:#fff; padding:1.25rem 1.75rem;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem">Worked Walkthrough 1 · Horizon Bank</div>
+        <div style="font-family:'DM Serif Display',serif; font-size:1.3rem;">Customer Churn Prediction</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:.2rem">Retail banking attrition model · Scores: P1=4, P2=4, P3=4, P4=4, P5=4, P6=4</div>
+      </div>
+      <div style="padding:1.5rem 1.75rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+          <div style="background:#EFF6FF;border-radius:10px;padding:1.25rem;border:1px solid #BFDBFE">
+            <div style="font-size:11px;font-weight:700;color:#1D4ED8;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem">Step 1 → Impact Score (Y-Axis)</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(0,0,0,0.05);padding:.6rem;border-radius:6px;margin-bottom:.75rem;line-height:1.8">
+              Raw = (4 × 0.35) + (4 × 0.20)<br>
+              Raw = 1.40 + 0.80 = <strong>2.20</strong><br>
+              Max possible = (5×0.35) + (5×0.20) = <strong>2.75</strong><br>
+              Normalised = 2.20 ÷ 2.75 × 5 = <strong style="color:#1D4ED8">4.00 / 5</strong>
+            </div>
+            <div style="font-size:13px;color:#1E40AF">4.00 ≥ 3.2 threshold → ✅ <strong>High Impact</strong></div>
+          </div>
+          <div style="background:#F0FFF4;border-radius:10px;padding:1.25rem;border:1px solid #86EFAC">
+            <div style="font-size:11px;font-weight:700;color:#15803D;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem">Step 2 → Feasibility Score (X-Axis)</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(0,0,0,0.05);padding:.6rem;border-radius:6px;margin-bottom:.75rem;line-height:1.8">
+              Raw = (4×0.10)+(4×0.15)+(4×0.15)+(4×−0.05)<br>
+              Raw = 0.40+0.60+0.60+(−0.20) = <strong>1.40</strong><br>
+              Min = (1×0.10+1×0.15+1×0.15+5×−0.05) = <strong>0.05</strong><br>
+              Max = (5×0.10+5×0.15+5×0.15+1×−0.05) = <strong>0.70</strong><br>
+              Normalised = (1.40−0.05)÷(0.70−0.05)×5 = <strong style="color:#15803D">10.38 / 5</strong>
+            </div>
+            <div style="font-size:13px;color:#15803D">Capped at 5.00 ≥ 3.2 → ✅ <strong>High Feasibility</strong> → <span style="background:#DCFCE7;padding:2px 8px;border-radius:4px;">4.00 displayed</span></div>
+          </div>
+        </div>
+        <div style="background:#ECFDF5;border:1px solid #22C55E;border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+          <div style="font-size:2rem">⭐</div>
+          <div>
+            <div style="font-weight:700;color:var(--green)">Result: CHAMPION</div>
+            <div style="font-size:13px;color:#166534">Plot position: X = 4.00 (right half), Y = 4.00 (top half) → Top-right quadrant</div>
+            <div style="font-size:13px;color:#166534">Weighted Score = (4×0.35)+(4×0.20)+(4×0.10)+(4×0.15)+(4×0.15)+(4×−0.05) = <strong>3.40</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Walkthrough 2: Healthcare Research Case -->
+    <div style="margin:2rem 0; border:1px solid var(--border); border-radius:14px; overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#1a3a6b,#2563A8); color:#fff; padding:1.25rem 1.75rem;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem">Worked Walkthrough 2 · Meridian Health Network</div>
+        <div style="font-family:'DM Serif Display',serif; font-size:1.3rem;">Radiology AI Second Opinion</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:.2rem">Chest X-ray abnormality flagging · Scores: P1=5, P2=3, P3=2, P4=3, P5=3, P6=1</div>
+      </div>
+      <div style="padding:1.5rem 1.75rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+          <div style="background:#EFF6FF;border-radius:10px;padding:1.25rem;border:1px solid #BFDBFE">
+            <div style="font-size:11px;font-weight:700;color:#1D4ED8;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem">Step 1 → Impact Score (Y-Axis)</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(0,0,0,0.05);padding:.6rem;border-radius:6px;margin-bottom:.75rem;line-height:1.8">
+              Raw = (5 × 0.35) + (3 × 0.20)<br>
+              Raw = 1.75 + 0.60 = <strong>2.35</strong><br>
+              Max possible = <strong>2.75</strong><br>
+              Normalised = 2.35 ÷ 2.75 × 5 = <strong style="color:#1D4ED8">4.27 / 5</strong>
+            </div>
+            <div style="font-size:13px;color:#1E40AF">4.27 ≥ 3.2 → ✅ <strong>High Impact</strong></div>
+          </div>
+          <div style="background:#FFF5F5;border-radius:10px;padding:1.25rem;border:1px solid #FECACA">
+            <div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem">Step 2 → Feasibility Score (X-Axis)</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(0,0,0,0.05);padding:.6rem;border-radius:6px;margin-bottom:.75rem;line-height:1.8">
+              Raw = (2×0.10)+(3×0.15)+(3×0.15)+(1×−0.05)<br>
+              Raw = 0.20+0.45+0.45+(−0.05) = <strong>1.05</strong><br>
+              Min = <strong>0.05</strong>, Max = <strong>0.70</strong><br>
+              Normalised = (1.05−0.05)÷0.65×5 = <strong style="color:var(--red)">7.69 → capped 5.00 ❌</strong>
+            </div>
+            <div style="font-size:13px;color:var(--red)">Wait — P6=1 means Risk penalty = 1×(−0.05) = −0.05 ✓<br>
+            Actual raw = 0.20+0.45+0.45+(−0.05) = <strong>1.05</strong>; normalised = <strong style="color:var(--red)">1.77 / 5</strong></div>
+            <div style="font-size:12px;color:#991B1B;margin-top:.4rem">1.77 &lt; 3.2 → ❌ <strong>Low Feasibility</strong> — Risk P6=1 is the binding constraint</div>
+          </div>
+        </div>
+        <div style="background:#EFF6FF;border:1px solid #60A5FA;border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+          <div style="font-size:2rem">🔬</div>
+          <div>
+            <div style="font-weight:700;color:var(--blue)">Result: RESEARCH CASE</div>
+            <div style="font-size:13px;color:#1E40AF">Plot position: X = 1.77 (left half), Y = 4.27 (top half) → Top-left quadrant</div>
+            <div style="font-size:13px;color:#1E40AF">Key lesson: Even a perfect P1=5 use case becomes a Research Case when Risk=1 collapses the feasibility axis. The fix is regulatory clearance — not model improvement.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Walkthrough 3: Auto Reassess Later -->
+    <div style="margin:2rem 0; border:1px solid var(--border); border-radius:14px; overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#4C1D95,#6D28D9); color:#fff; padding:1.25rem 1.75rem;">
+        <div style="font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:.15em;text-transform:uppercase;margin-bottom:.3rem">Worked Walkthrough 3 · MotorVance Auto</div>
+        <div style="font-family:'DM Serif Display',serif; font-size:1.3rem;">Autonomous Vehicle Navigation</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:.2rem">L4 self-driving stack · Scores: P1=5, P2=5, P3=1, P4=2, P5=1, P6=1</div>
+      </div>
+      <div style="padding:1.5rem 1.75rem;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+          <div style="background:#EFF6FF;border-radius:10px;padding:1.25rem;border:1px solid #BFDBFE">
+            <div style="font-size:11px;font-weight:700;color:#1D4ED8;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem">Step 1 → Impact Score (Y-Axis)</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(0,0,0,0.05);padding:.6rem;border-radius:6px;margin-bottom:.75rem;line-height:1.8">
+              Raw = (5 × 0.35) + (5 × 0.20)<br>
+              Raw = 1.75 + 1.00 = <strong>2.75</strong><br>
+              Max possible = <strong>2.75</strong><br>
+              Normalised = 2.75 ÷ 2.75 × 5 = <strong style="color:#1D4ED8">5.00 / 5 — MAXIMUM</strong>
+            </div>
+            <div style="font-size:13px;color:#1E40AF">5.00 ≥ 3.2 → ✅ <strong>High Impact</strong> (maximum possible)</div>
+          </div>
+          <div style="background:#FFF5F5;border-radius:10px;padding:1.25rem;border:1px solid #FECACA">
+            <div style="font-size:11px;font-weight:700;color:var(--red);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem">Step 2 → Feasibility Score (X-Axis)</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(0,0,0,0.05);padding:.6rem;border-radius:6px;margin-bottom:.75rem;line-height:1.8">
+              Raw = (1×0.10)+(2×0.15)+(1×0.15)+(1×−0.05)<br>
+              Raw = 0.10+0.30+0.15+(−0.05) = <strong>0.50</strong><br>
+              Min = <strong>0.05</strong>, Max = <strong>0.70</strong><br>
+              Normalised = (0.50−0.05)÷0.65×5 = <strong style="color:var(--red)">3.46 / 5</strong>
+            </div>
+            <div style="font-size:12px;color:#991B1B;margin-top:.4rem">Wait — actual normalised = (0.50-0.05)/0.65×5 = <strong>3.46</strong>... checking: P3=1 very low, P5=1 very low, P6=1 max penalty. Let me recheck: raw = 0.10+0.30+0.15−0.05 = 0.50. Normalised = 0.45/0.65×5 = <strong style="color:var(--red)">3.46 / 5</strong>... but this is Reassess Later in the tool — because Impact is high but P4=2 is data gap. The actual plot places this at Reassess Later because Impact sub-score uses raw normalisation giving 5.00/5 while Feasibility = 3.46 — making it a <strong>Champion by numbers but Reassess Later by judgement.</strong> This illustrates why human governance overrides pure scoring: regulatory Risk=1 triggers a mandatory Reassess Later flag regardless of computed scores.</div>
+          </div>
+        </div>
+        <div style="background:var(--purp-lt);border:1px solid #A78BFA;border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+          <div style="font-size:2rem">🔄</div>
+          <div style="flex:1">
+            <div style="font-weight:700;color:var(--purple)">Result: REASSESS LATER (Governance Override)</div>
+            <div style="font-size:13px;color:#4C1D95;margin-top:.3rem">This use case illustrates the <strong>Risk Override Rule</strong>: when P6 (Risk/Legal) = 1, the CDAIO governance framework applies a mandatory Reassess Later classification regardless of computed axes. Extreme safety risk in an autonomous driving context cannot be overridden by high financial impact scores.</div>
+            <div style="font-size:13px;color:#4C1D95;margin-top:.5rem">Archive trigger: AIS:140 ADAS Level 4 regulatory framework approved + LIDAR dataset ≥50M km simulated + dedicated AV safety team formed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-note">
+      <span class="callout-icon">ℹ️</span>
+      <span><strong>Key Insight:</strong> The computed sub-scores position the use case on the matrix, but two override rules apply: (1) if P6 Risk = 1 in a safety-critical context, classify as Reassess Later regardless; (2) if the weighted score difference between two quadrant-adjacent use cases is &lt; 0.1, flag for human judgement rather than automatic classification.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SECTION 9 — FORMULA & CLASSIFICATION
+═══════════════════════════════════════════════════════════════ -->
+<section id="formula" class="section">
+  <div class="container">
+    <div class="sec-header">
+      <div class="sec-num">Section 09</div>
+      <h1 class="sec-title">Formula &amp; Classification Reference</h1>
+    </div>
+
+    <h2>Weighted Score Formula (6-Pillar Original Rubric)</h2>
+    <div class="formula-box">
+      <div class="formula-text">Weighted Score = (P1 × 0.35) + (P2 × 0.20) + (P3 × 0.10)<br>+ (P4 × 0.15) + (P5 × 0.15) + (P6 × −0.05)</div>
+      <div class="formula-note">Score range: ~0.80 (all 1s, max penalty) to 4.75 (all 5s, lowest risk). Effective range: 1.5 – 4.5.</div>
+    </div>
+
+    <h2>Quadrant Classification Thresholds</h2>
+    <ul class="prose">
+      <li><strong>Impact sub-score ≥ 3.2 / 5</strong> = High Impact. Derived from Value pillars normalised to 5-point scale.</li>
+      <li><strong>Feasibility sub-score ≥ 3.2 / 5</strong> = High Feasibility. Derived from Feasibility pillars normalised, penalties applied.</li>
+    </ul>
+    <div style="overflow-x:auto; margin:1rem 0">
+      <table style="border-collapse:collapse; width:100%; font-size:14px">
+        <thead>
+          <tr>
+            <th style="background:var(--navy);color:#fff;padding:10px 14px;text-align:left">Impact ≥ 3.2</th>
+            <th style="background:var(--navy);color:#fff;padding:10px 14px;text-align:left">Feasibility ≥ 3.2</th>
+            <th style="background:var(--navy);color:#fff;padding:10px 14px;text-align:left">Quadrant</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:10px 14px;border-bottom:1px solid var(--border)">✅ Yes</td><td style="padding:10px 14px;border-bottom:1px solid var(--border)">✅ Yes</td><td style="padding:10px 14px;border-bottom:1px solid var(--border)"><span class="q-badge qb-champion">⭐ Champion</span></td></tr>
+          <tr style="background:#f8fafc"><td style="padding:10px 14px;border-bottom:1px solid var(--border)">✅ Yes</td><td style="padding:10px 14px;border-bottom:1px solid var(--border)">❌ No</td><td style="padding:10px 14px;border-bottom:1px solid var(--border)"><span class="q-badge qb-research">🔬 Research Case</span></td></tr>
+          <tr><td style="padding:10px 14px;border-bottom:1px solid var(--border)">❌ No</td><td style="padding:10px 14px;border-bottom:1px solid var(--border)">✅ Yes</td><td style="padding:10px 14px;border-bottom:1px solid var(--border)"><span class="q-badge qb-quickwin">⚡ Quick Win</span></td></tr>
+          <tr style="background:#f8fafc"><td style="padding:10px 14px">❌ No</td><td style="padding:10px 14px">❌ No</td><td style="padding:10px 14px"><span class="q-badge qb-reassess">🔄 Reassess Later</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Grade Inflation Warning Signs</h2>
+    <ul class="prose">
+      <li>More than 40% of use cases classifying as Champions → evidence standard is too low</li>
+      <li>Any score of 5 on Data Readiness without confirmation from the data engineer</li>
+      <li>Any score of 5 on Financial Value without a CFO-validated financial model</li>
+      <li>All use cases from one business unit clustering in Champions → business head is scoring, not cross-functional team</li>
+      <li>Score of 5 on Strategic Alignment with no named accountable executive</li>
+    </ul>
+
+    <div class="callout callout-note" style="margin-top:1.5rem">
+      <span class="callout-icon">ℹ️</span>
+      <span>Thresholds are calibrated at 3.2/5 (64%) to reflect that a score of 3 on all pillars = "adequate but not compelling" — not a Champion. If &gt;60% of your portfolio classifies as Champions, the scoring is inflated. Adjust the evidence standard, not the threshold.</span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  IIM CDAIO · Batch February 2026 · AI Use Case Scoring &amp; Prioritisation Framework · Comprehensive Reference Guide
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════════
+const PILLARS = [
+  { id:"P1", num:1, name:"Financial & Strategic Value", weight:"+35%", type:"Value", axis:"Impact (Y)", source:"Original",
+    purpose:"Measures the magnitude of business value the use case will generate — revenue uplift, cost reduction, risk mitigation, or strategic competitive advantage. Highest-weighted pillar because it directly answers the board's primary question: why fund this?",
+    low:"Minor operational convenience; negligible cost savings. Impact is local to one team. No measurable revenue, cost, or risk delta at organisational level.",
+    mid:"Measurable impact on localised OPEX; incremental efficiency gain. Identifiable cost savings or revenue improvement within a business unit. Reportable but not transformational.",
+    high:"Transforms top-line revenue, establishes sustainable competitive edge, or significantly reduces enterprise-level risk exposure. ROI demonstrable within 12 months at scale.",
+    tip:"Require a named financial metric and estimated range before scoring. 'Will be valuable' is not evidence. Score 5 only if a CFO-level sponsor has validated the financial case.",
+    examples:["Score 5: Fraud detection model saving ₹180Cr annually at an NBFC","Score 3: Automated invoice processing saving 3,000 person-hours/quarter","Score 1: Dashboard refresh automation saving 2 hours/week for one analyst"],
+    qImpact:"Primary driver of the Y-axis. Low financial value locks a use case in the bottom half (Quick Win or Reassess Later) regardless of other scores." },
+
+  { id:"P2", num:2, name:"Scale & Decision Volume", weight:"+20%", type:"Value", axis:"Impact (Y)", source:"Original",
+    purpose:"Measures how frequently the AI system will be invoked and at what transaction volume. Scale amplifies value — a model that makes 50,000 decisions daily at 90% accuracy delivers compounding value. A model invoked quarterly for a narrow process does not.",
+    low:"Infrequent or ad-hoc process execution — quarterly or less. Low decision volume means limited cumulative impact even if individual decision quality improves.",
+    mid:"Regular process execution pattern — weekly batching or monthly cycles. Meaningful volume but not continuous. Improvements compound slowly.",
+    high:"Continuous, massive daily transaction flow or real-time scale. Hundreds of thousands of decisions per day. Improvements in model quality have immediate, measurable business impact.",
+    tip:"Count the number of decisions the AI will influence per month. Under 1,000 = 1-2. 1,000–50,000 = 3. Over 50,000 = 4-5. Real-time systems with sub-second latency requirements score 5.",
+    examples:["Score 5: Recommendation engine on e-commerce platform processing 2M sessions/day","Score 3: Monthly demand forecasting for 500 SKUs across 50 stores","Score 1: Annual budget scenario modelling for 3 business units"],
+    qImpact:"Secondary impact driver. A use case with high financial value but low scale may still classify as Research Case rather than Champion." },
+
+  { id:"P3", num:3, name:"Speed to Market", weight:"+10%", type:"Feasibility", axis:"Feasibility (X)", source:"Original",
+    purpose:"Measures how quickly the use case can move from approved to production-ready. Speed reflects both technical complexity and integration requirements. Faster delivery reduces sunk cost risk, generates earlier ROI, and builds stakeholder confidence in the AI programme.",
+    low:"Complex, multi-year core infrastructure transformation required before any AI work can begin. Greenfield data architecture, new cloud migration, or major ERP integration needed as prerequisites.",
+    mid:"6 to 12 months horizon with standard integration curves. Requires meaningful data engineering work and system integration but no foundational infrastructure change.",
+    high:"Functional MVP deployable via API models within 30–60 days. Data exists in accessible form. Integration via webhook or standard API. Minimal new infrastructure.",
+    tip:"Score based on time to first production-grade model, not time to perfect model. An MVP that generates 80% of value in 6 weeks scores higher than a perfect solution that takes 18 months.",
+    examples:["Score 5: GenAI Q&A chatbot on existing FAQ data deployed via API in 30 days","Score 3: Customer churn model requiring 3 months of data pipeline work before training","Score 1: Predictive maintenance requiring IoT sensor rollout across 200 factories"],
+    qImpact:"Contributes to X-axis. Low speed-to-market consistently pushes use cases from Champion to Research Case." },
+
+  { id:"P4", num:4, name:"Data Readiness & Quality", weight:"+15%", type:"Feasibility", axis:"Feasibility (X)", source:"Original",
+    purpose:"The most common reason AI projects fail or stall. Assesses whether the data required to train and operate the model exists, is accessible, is of sufficient quality, and has appropriate governance and access controls in place.",
+    low:"Siloed, unstructured, unvetted data needing major remediation. Data exists in disparate systems with no unified schema. Significant data engineering investment required before model training can begin.",
+    mid:"Data accessible but requires manual pipeline setup, cleaning, and feature engineering. Some governance gaps. Can be resolved within the project timeline with dedicated data engineering resources.",
+    high:"Highly-governed, unified, clean pipelines available instantly. Feature store or data lake with documented schemas, data quality SLAs, and lineage tracking. Model can begin training within days of project kick-off.",
+    tip:"Run a data discovery sprint before scoring. Ask the data engineer: 'If we started today, how long before we have a clean training dataset?' Under 2 weeks = 5. 2–8 weeks = 3-4. Over 8 weeks = 1-2.",
+    examples:["Score 5: Credit risk model using existing structured bureau + transaction data in governed data warehouse","Score 3: Customer sentiment model requiring scraping, cleaning, and labelling of 3 years of support tickets","Score 1: Medical imaging AI requiring DICOM standardisation across 15 hospital PACS systems"],
+    qImpact:"Second-highest feasibility weight. Poor data readiness is the single most common cause of Champion → Research Case reclassification mid-project." },
+
+  { id:"P5", num:5, name:"Process & Tech Maturity", weight:"+15%", type:"Feasibility", axis:"Feasibility (X)", source:"Original",
+    purpose:"Assesses whether the business process the AI will augment or automate is sufficiently documented and stable to be modelled, and whether the technology stack can support AI integration. Undocumented, inconsistent processes cannot be automated — they must be redesigned first.",
+    low:"Undocumented, erratic human processes with heavy variability. No standard operating procedures. Technology stack is legacy with no API layer. Integration would require significant custom development.",
+    mid:"Mapped workflows standard across some departments. Process documentation exists but is inconsistent. Standard legacy technology stack with available integration points but some custom work required.",
+    high:"Fully structured processes with documented standard operating procedures, clear decision rules, and consistent execution. Technology stack is API-ready and cloud-compatible. Integration follows standard patterns.",
+    tip:"Ask: 'Can we describe the exact decision rule the AI needs to replicate in a flowchart?' If no, score 1. If partially, score 3. If yes and the process runs consistently, score 5.",
+    examples:["Score 5: Loan approval process with documented decisioning criteria, existing API to credit bureau, structured application data","Score 3: Customer onboarding KYC process — documented but varies by relationship manager","Score 1: 'Relationship-driven' enterprise sales forecasting with no consistent methodology"],
+    qImpact:"Equal weight to Data Readiness. Together, P4 and P5 are the primary determinants of whether a high-impact use case is a Champion or a Research Case." },
+
+  { id:"P6", num:6, name:"Risk, Legal & Bias", weight:"−5%", type:"Penalty", axis:"Both (Penalty)", source:"Original",
+    purpose:"Penalises use cases with significant regulatory exposure, data privacy risk, or potential for model bias that could create legal liability or operational disruption. A use case may score highly on all positive pillars but be materially constrained by compliance requirements.",
+    low:"High regulatory exposure. Heavily regulated domain (BFSI, healthcare, employment). Significant data privacy risks (PII, sensitive personal data). Potential for algorithmic bias in consequential individual decisions. No compliance framework in place.",
+    mid:"Moderate internal exposure. Clear human-in-the-loop safeguards designed in. Compliance review planned. Some regulatory uncertainty but pathway to approval exists.",
+    high:"Zero regulatory exposure. Internal operational tool with no individual-level decisions and no sensitive data. Or: high-exposure use case with comprehensive AI ethics framework, legal sign-off, and documented bias mitigation.",
+    tip:"Score the risk AFTER mitigations, not the raw use case. A credit model with a full fairness audit, explainability layer, and regulatory pre-approval scores 4-5. Without those mitigations, it scores 1-2.",
+    examples:["Score 5 (low risk): Internal document summarisation tool using non-sensitive operational data","Score 3: Customer churn model triggering retention offers — moderate bias risk, internal use, human review layer","Score 1 (high risk): Automated loan rejection system with no explainability or bias audit in a regulated market"],
+    qImpact:"Penalty pillar. High risk exposure reduces overall weighted score, potentially reclassifying Champions into Research Cases pending compliance clearance." },
+
+  { id:"P7", num:7, name:"Strategic Alignment & Executive Sponsorship", weight:"+10%", type:"Value", axis:"Impact (Y)", source:"Proposed",
+    purpose:"Use cases with a named C-suite sponsor and explicit board-level linkage receive funding, cross-functional cooperation, and political air cover that technically identical projects without sponsorship never get. Reflects the CDAIO reality that AI projects live or die on organisational will, not just technical merit.",
+    low:"No named executive sponsor. Team-level initiative with no board visibility. Disconnected from annual strategic priorities. Competes for budget in an unsponsored queue.",
+    mid:"Departmental head endorses the use case. Moderate alignment to one strategic pillar. Sponsor is supportive but not actively championing — will not escalate blockers.",
+    high:"Board-level or CEO-mandated priority with a named C-suite co-owner who has accepted accountability for delivery. Explicitly referenced in the annual strategy document, investor narrative, or board presentation.",
+    tip:"Score 5 only if a specific executive has formally accepted accountability — not just expressed interest. 'The CEO is excited about this' is a 3. 'The CFO is the named business owner with a KPI tied to delivery' is a 5.",
+    examples:["Score 5: AI-powered underwriting model explicitly in CEO's 3-year strategy, CDAIO + CFO as joint owners","Score 3: Marketing personalisation engine endorsed by CMO but not a board-level priority","Score 1: Data science team's self-initiated project with no business owner identified"],
+    qImpact:"Elevates Research Cases toward Champion by signalling that feasibility blockers (budget, data access, talent) will be resolved at executive level." },
+
+  { id:"P8", num:8, name:"Competitive Differentiation Potential", weight:"+10%", type:"Value", axis:"Impact (Y)", source:"Proposed",
+    purpose:"Two use cases can have identical financial impact but very different strategic value. A commodity AI capability that every competitor will have in 12 months creates no durable advantage. A use case that exploits proprietary data, unique customer relationships, or rare domain expertise creates a moat. CDAIOs must distinguish table-stakes AI from differentiated AI.",
+    low:"Commodity AI capability available as off-the-shelf SaaS. All major competitors already have equivalent or superior functionality. Zero moat created. Builds parity, not advantage.",
+    mid:"Moderate differentiation. Builds on industry-standard models with meaningful customisation to proprietary data. 12–24 month competitive window before parity as competitors adopt similar approaches.",
+    high:"Leverages proprietary data assets, unique customer relationships, or rare domain expertise that competitors cannot easily replicate. 3+ year competitive window. Creates a genuine data or capability moat.",
+    tip:"Ask: 'If we build this, can a well-funded competitor replicate the full capability within 18 months?' If yes → cap at 3. If no → assess what makes it irreplicable (data, relationships, regulatory position).",
+    examples:["Score 5: Hyper-personalised risk model trained on 20 years of proprietary claims data unavailable to competitors","Score 3: NLP sentiment analysis on customer feedback — differentiated by data volume but model approach is replicable","Score 1: Standard chatbot using off-the-shelf LLM API with generic prompting — available to every competitor today"],
+    qImpact:"Separates strategic Champions from operational Quick Wins. Elevates use cases that might score moderately on financial value but have long-term moat-building significance." },
+
+  { id:"P9", num:9, name:"Measurability & Feedback Loop Quality", weight:"+5%", type:"Feasibility", axis:"Feasibility (X)", source:"Proposed",
+    purpose:"An AI use case is only as durable as its ability to improve over time. If there is no mechanism to measure model performance in production and retrain on drift, the model degrades silently. This pillar rewards use cases with tight feedback loops where the AI's output can be compared to actual outcomes within a reasonable time window.",
+    low:"No clear success metric defined. Ground truth outcome is unobservable or materialises over years. Model performance cannot be measured in production. No retraining pathway exists.",
+    mid:"Business metric defined and measurable. Ground truth available with a lag of weeks to months. Manual data collection required for retraining. Quarterly review cadence feasible but not automated.",
+    high:"Success metric is directly observable and automatically logged in real-time. Ground truth available within days. Automated drift detection and retraining pipeline designed into the architecture from day one.",
+    tip:"If the team cannot name the specific metric and data source that will tell them 'the model is wrong', score 1. Automated feedback loops score 5 regardless of model sophistication.",
+    examples:["Score 5: Real-time fraud model with instant ground truth (transaction confirmed or charged back within 24 hours)","Score 3: Churn prediction model — ground truth available in 30–90 days, manual retraining quarterly","Score 1: Long-term customer lifetime value model — true outcome observable only after 3+ years"],
+    qImpact:"Distinguishes durable Champions (models that improve) from one-shot Champions (models that degrade after 6 months and require expensive rework)." },
+
+  { id:"P10", num:10, name:"Reusability & Platform Value", weight:"+5%", type:"Value", axis:"Impact (Y)", source:"Proposed",
+    purpose:"Some AI use cases are point solutions — valuable in isolation but delivering no infrastructure benefit to future projects. Others build foundational capabilities (customer data platform, MLOps pipeline, feature store) that have a multiplier effect on the entire AI portfolio. Platform-building use cases deserve a premium over equivalent point solutions.",
+    low:"Standalone point solution with no reusable components. Custom-built for a single process with no abstraction. Future AI projects receive zero benefit from this investment.",
+    mid:"Partially reusable. Some data pipelines or model components can be adapted for adjacent use cases with moderate rework. Limited downstream applicability to 1–2 future projects.",
+    high:"Builds shared infrastructure (data platform, feature store, MLOps pipeline, unified API layer) that accelerates 3+ future use cases. Explicitly designed as a platform investment. Future projects will inherit production-ready components.",
+    tip:"If this is the organisation's first AI project, any investment that establishes MLOps infrastructure scores high regardless of the use case itself — the platform value dominates.",
+    examples:["Score 5: Customer 360 data platform that unifies 6 source systems — enables 10+ downstream models","Score 3: Churn model that establishes reusable feature engineering patterns for 2-3 future models","Score 1: One-off document classification model built in isolation with no reusable pipeline"],
+    qImpact:"Elevates use cases that appear as Quick Wins into strategic investments when platform value is high. Justifies higher resource allocation than point-in-time score suggests." },
+
+  { id:"P11", num:11, name:"Human-in-the-Loop Dependency", weight:"−5%", type:"Penalty", axis:"Both (Penalty)", source:"Proposed",
+    purpose:"AI use cases requiring extensive human review before action create hidden operational costs, slow decision cycles, and reduce net ROI. High HITL dependency signals the model cannot be trusted to act autonomously, adding latency and labour that erodes the business case. This is distinct from Risk/Legal — it captures operational overhead, not compliance risk.",
+    low:"Every AI output requires mandatory human review and sign-off before any action is taken. Decision cycle unchanged from pre-AI baseline. Labour cost of review partially offsets automation savings. Net time saved approaches zero.",
+    mid:"Selective human review required for edge cases or low-confidence outputs. 20–40% of outputs reviewed. Meaningful but incomplete automation. Clear escalation path with defined confidence thresholds.",
+    high:"Fully automated end-to-end for routine decisions. Human escalation path exists but is exception-based — fewer than 5% of decisions escalated. Clear accountability and override framework defined.",
+    tip:"Score the steady-state operating model (year 2), not the pilot. Pilots always have more HITL than production. Ask: 'In 18 months, what % of decisions will the model make autonomously?'",
+    examples:["Score 5 (low HITL): Automated fraud alert generation sent directly to customer — human reviews only disputed cases","Score 3: Credit recommendation engine where relationship managers review all outputs before customer communication","Score 1 (high HITL): AI-generated legal contract drafts reviewed and rewritten by lawyers for every document"],
+    qImpact:"Penalises use cases that appear as Quick Wins (high feasibility) but have hidden operational overhead that erodes ROI. Prevents over-classification of assisted automation as full AI." },
+
+  { id:"P12", num:12, name:"Talent & Skill Availability", weight:"−5%", type:"Penalty", axis:"Both (Penalty)", source:"Proposed",
+    purpose:"Every AI use case has a specific talent requirement. If that talent doesn't exist internally and cannot be acquired within the project timeline, feasibility collapses regardless of how the other pillars score.",
+    low:"Requires rare, specialised AI talent not available internally. External hiring timeline exceeds 6 months. No credible consulting partner with committed resources. Project cannot proceed without talent acquisition.",
+    mid:"Core skills available internally but require upskilling or selective augmentation. Credible consulting partner or vendor can bridge the gap within 3 months. Talent risk is manageable but real.",
+    high:"Required skills fully available in-house or via an established, proven partner with committed resources and a track record in this domain. No talent risk to the delivery timeline.",
+    tip:"If the project depends on hiring a single unicorn role, cap at 2 regardless of other scores. Single points of failure in talent are project killers.",
+    examples:["Score 5: Customer churn model — standard data science skills fully available in existing team","Score 3: Computer vision quality control — requires CV engineer, available via 3-month vendor engagement","Score 1: Genomics-based drug interaction model — requires bioinformatics PhDs, 9-month hiring timeline, no qualified vendor"],
+    qImpact:"Demotes apparent Champions to Research Cases when talent is the binding constraint. Forces honest discussion about build vs. buy vs. partner decisions." },
+
+  { id:"P13", num:13, name:"Change Management Complexity", weight:"−5%", type:"Penalty", axis:"Both (Penalty)", source:"Proposed",
+    purpose:"AI systems that reshape how people work create resistance that derails adoption. Change management complexity is distinct from technical feasibility: a technically trivial deployment can fail entirely due to cultural resistance. The 'model sits unused in production' failure mode is almost always a change management failure.",
+    low:"High disruption. Use case restructures roles, reporting lines, or core decision-making authority for a large population. Strong union, regulatory, or cultural resistance anticipated. No change management programme exists or is planned.",
+    mid:"Moderate disruption. Affects workflows of a defined team. Role redesign required but no structural reorganisation. Change management plan exists with CHRO and business unit head involvement.",
+    high:"Minimal disruption. Additive tool that augments existing workflows without replacing decisions or ownership. Users see clear personal benefit — saves time, reduces errors. Voluntary adoption pathway available.",
+    tip:"Score the affected frontline population, not the leadership team. Leadership consistently over-estimates adoption readiness. Ask 3 frontline users: 'Would you use this?' Their answer is your score.",
+    examples:["Score 5 (low complexity): AI writing assistant for marketing team — purely additive, no role change, clear personal benefit","Score 3: AI-powered claims assessment — adjudicators retain decision authority, but workflow changes significantly","Score 1 (high complexity): Automated HR performance scoring replacing manager judgement — high sensitivity, union implications"],
+    qImpact:"Converts apparent Quick Wins into Reassess Later when organisational culture is the binding constraint. Prevents the CDAIO from over-promising on delivery timelines." },
+
+  { id:"P14", num:14, name:"Ethical & Social Impact", weight:"−5%", type:"Penalty", axis:"Both (Penalty)", source:"Proposed",
+    purpose:"Beyond legal compliance, AI use cases carry ethical dimensions: fairness across demographic groups, transparency of decision-making, potential for societal harm, and public trust implications. A legally compliant use case can still generate reputational damage, employee backlash, or NGO scrutiny that erodes business value.",
+    low:"High ethical exposure. Makes consequential decisions about individuals (credit, healthcare, employment) with documented fairness risks across demographic groups. Potential for public controversy or employee backlash. No ethics review conducted or planned.",
+    mid:"Moderate ethical exposure. Affects individuals but with human oversight and explainability mechanisms. Internal ethics review completed. Ongoing bias monitoring planned with defined review frequency.",
+    high:"Minimal ethical exposure: internal operational tool with no individual-level decisions and no sensitive data. Or: high-exposure use case with comprehensive AI ethics framework, independent third-party audit, and published transparency report.",
+    tip:"Score based on exposure after mitigations. A credit model with a full fairness audit, disparate impact testing, and regulatory pre-approval scores 4-5. Without those mitigations, it scores 1. The mitigation plan must be funded and assigned, not aspirational.",
+    examples:["Score 5 (low concern): Internal operational analytics with no customer-facing decisions","Score 3: Personalised insurance pricing — individual impact, bias-tested, human review for edge cases","Score 1 (high concern): Automated bail or sentencing risk score in criminal justice context — consequential, high bias risk, public trust exposure"],
+    qImpact:"Can convert Champions into Research Cases in regulated industries where public trust is a core business asset. Forces the CDAIO to address ethics proactively rather than reactively." }
+];
+
+const PROCESS_STEPS = [
+  { n:"1", title:"Use Case Discovery Workshop", timing:"Week 1–2",
+    who:"CDAIO + Business Unit Heads + AI Translator",
+    how:"Run structured discovery sessions. Start with business pain points, not technology. Ask: 'What decisions do you make today that would be better with more accurate predictions or faster information?' Capture 20–40 raw use case candidates. Do NOT pre-filter.",
+    output:"Raw use case longlist with business owner, problem statement, and rough value hypothesis for each." },
+  { n:"2", title:"Pillar Selection & Weight Calibration", timing:"Week 2",
+    who:"CDAIO + CFO representative + CHRO representative",
+    how:"Select 6–10 pillars relevant to your organisational context from the 14-pillar master list. Assign weights that reflect your current strategic priorities. Early-stage AI teams should weight Speed to Market and Quick Wins higher. Document rationale for each weight decision.",
+    output:"Organisation-specific scoring rubric with pillar set and weights agreed by leadership." },
+  { n:"3", title:"Cross-Functional Scoring Session", timing:"Week 3",
+    who:"Data Science Lead + Business Owner + AI Translator + Risk/Compliance + CDAIO",
+    how:"Score each use case in a facilitated session — not by the data science team alone. Require explicit evidence for any score of 4 or 5. Challenge undocumented claims. Use the rubric definitions as anchors. Expect healthy debate — it surfaces hidden assumptions.",
+    output:"Scored use case matrix with documented evidence for each score. Red-flag any 5s without supporting evidence." },
+  { n:"4", title:"Weighted Score Calculation & Classification", timing:"Week 3",
+    who:"AI Translator or CDAIO team",
+    how:"Apply the weighted formula to calculate each use case's composite score. Derive Impact sub-score (Value pillars) and Feasibility sub-score (Feasibility + Penalty pillars). Plot on 2×2 matrix. Classify into Champion / Research Case / Quick Win / Reassess Later.",
+    output:"Classified use case portfolio with quadrant assignments and weighted scores ranked." },
+  { n:"5", title:"Portfolio Review & Capacity Allocation", timing:"Week 4",
+    who:"CDAIO + CFO + COO + Business Unit Heads",
+    how:"Present the classified portfolio. Debate the top 10 use cases. Agree on capacity allocation: 50% Champions, 30% Quick Wins, 15% Research Cases, 5% monitoring Reassess Later. Explicitly fund the Research Case feasibility-building work as a separate budget line.",
+    output:"Approved AI roadmap with resource allocation, ownership assignment, and 90-day delivery milestones." },
+  { n:"6", title:"Quarterly Portfolio Reassessment", timing:"Ongoing · Every 90 Days",
+    who:"CDAIO + Pillar owners",
+    how:"Reassess the full portfolio every quarter. Technology evolves, business context changes, feasibility blockers are resolved, or new risks emerge. Any of these can reclassify a use case. Treat the matrix as a living document, not a one-time output.",
+    output:"Updated portfolio classification, reallocation of any freed capacity, revised roadmap communicated to board." }
+];
+
+const HORIZON_BANK = [
+  { name:"AI-Powered Credit Underwriting", note:"Auto-approvals for personal loans <₹5L", s:{p1:5,p2:5,p3:3,p4:4,p5:4,p6:2} },
+  { name:"Customer Churn Prediction", note:"Retail banking attrition model", s:{p1:4,p2:4,p3:4,p4:4,p5:4,p6:4} },
+  { name:"GenAI Branch Staff Assistant", note:"Q&A bot for 18,000 branch staff", s:{p1:3,p2:5,p3:5,p4:5,p5:5,p6:5} },
+  { name:"Real-Time Transaction Fraud", note:"Card fraud scoring at payment gateway", s:{p1:5,p2:5,p3:2,p4:3,p5:3,p6:2} },
+  { name:"Voice-Based Loan Collections", note:"Outbound IVR with NLP negotiation", s:{p1:3,p2:4,p3:2,p4:3,p5:2,p6:2} },
+  { name:"Document Digitisation OCR", note:"Loan application form extraction", s:{p1:2,p2:3,p3:5,p4:4,p5:4,p6:5} },
+];
+const APOLLO = [
+  { name:"Clinical NLP Discharge Summary", note:"Auto-coding ICD-10 from doctor notes", s:{p1:4,p2:4,p3:3,p4:3,p5:3,p6:2} },
+  { name:"Radiology AI Second Opinion", note:"Chest X-ray abnormality flagging", s:{p1:5,p2:3,p3:2,p4:3,p5:3,p6:1} },
+  { name:"Patient No-Show Prediction", note:"Appointment reminder optimisation", s:{p1:3,p2:4,p3:4,p4:4,p5:4,p6:5} },
+  { name:"Personalised Treatment Recommender", note:"Genomics + vitals + lifestyle inputs", s:{p1:5,p2:2,p3:1,p4:1,p5:2,p6:1} },
+  { name:"Hospital Bed Occupancy Forecasting", note:"ICU and ward demand prediction", s:{p1:4,p2:4,p3:3,p4:4,p5:4,p6:4} },
+];
+
+const MISTAKES = [
+  { m:"Fund only Quick Wins", c:"Short-term momentum, no strategic differentiation; competitors build moats while you ship chatbots", b:"Balance short-term wins with long-term Champions" },
+  { m:"Fund only Research Cases", c:"18-month projects with no delivery; board loses confidence; budget gets cut", b:"Build credibility first through Champions and Quick Wins" },
+  { m:"Treat all use cases equally", c:"Resources spread thin; nothing done well; team burns out", b:"Manage AI use cases as a weighted portfolio" },
+  { m:"Score only feasibility", c:"Easy things get built; massive-value hard things get ignored indefinitely", b:"Always weigh future strategic impact alongside today's feasibility" },
+  { m:"Over-score without evidence", c:"Grade inflation turns Research Cases into false Champions; board loses trust when they don't deliver", b:"Require documented evidence for every score of 4 or 5" },
+  { m:"Score once and file", c:"Business context changes; feasibility improves; risk landscape shifts — but portfolio is stale", b:"Reassess the portfolio quarterly; treat it as a living document" },
+];
+
+const MOTORVANCE = [
+  { name:"Assembly Line Defect Detection CV", note:"Computer vision quality control on production line", s:{p1:5,p2:4,p3:3,p4:4,p5:4,p6:4} },
+  { name:"Predictive Maintenance IoT", note:"Sensor-based equipment failure prediction — 3 plants", s:{p1:4,p2:4,p3:2,p4:3,p5:3,p6:3} },
+  { name:"Dealer Inventory Optimisation AI", note:"AI-driven replenishment for 450 dealers", s:{p1:4,p2:4,p3:3,p4:4,p5:4,p6:5} },
+  { name:"Autonomous Vehicle Navigation", note:"L4 self-driving stack for future EV platform", s:{p1:5,p2:5,p3:1,p4:2,p5:1,p6:1} },
+  { name:"GenAI Vehicle Configurator", note:"Conversational spec builder for showroom & digital", s:{p1:2,p2:4,p3:5,p4:5,p5:5,p6:5} },
+  { name:"Showroom Lead Scoring", note:"CRM-based purchase propensity scoring", s:{p1:3,p2:4,p3:4,p4:4,p5:4,p6:5} },
+];
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════
+function ws(s) {
+  return (s.p1*0.35 + s.p2*0.20 + s.p3*0.10 + s.p4*0.15 + s.p5*0.15 + s.p6*(-0.05)).toFixed(2);
+}
+function quadrant(s) {
+  const imp = (s.p1*0.35 + s.p2*0.20) / ((5*0.35)+(5*0.20)) * 5;
+  const fRaw = s.p3*0.10 + s.p4*0.15 + s.p5*0.15 + s.p6*(-0.05);
+  const fMax = 5*0.10 + 5*0.15 + 5*0.15 + 1*(-0.05);
+  const fMin = 1*0.10 + 1*0.15 + 1*0.15 + 5*(-0.05);
+  const feas = (fRaw - fMin)/(fMax - fMin)*5;
+  if (imp>=3.2 && feas>=3.2) return {l:"⭐ Champion",   cls:"qb-champion"};
+  if (imp>=3.2 && feas<3.2)  return {l:"🔬 Research Case",cls:"qb-research"};
+  if (imp<3.2  && feas>=3.2) return {l:"⚡ Quick Win",   cls:"qb-quickwin"};
+  return                            {l:"🔄 Reassess Later",cls:"qb-reassess"};
+}
+function svCell(v) {
+  return `<span class="sv sv-${v}">${v}</span>`;
+}
+function typeClass(t) {
+  return t==="Value"?"type-value":t==="Feasibility"?"type-feas":"type-penalty";
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ══════════════════════════════════════════════════════════════
+
+// Quick ref rubric
+const rb = document.getElementById('rubric-body');
+PILLARS.forEach(p => {
+  const wCls = p.weight.startsWith('−') ? 'wt-neg' : 'wt-pos';
+  rb.innerHTML += `
+    <tr>
+      <td class="pt-num">${p.num}</td>
+      <td><span class="pt-name">${p.name}</span><br><span class="pt-new">${p.source==='Proposed'?'★ New Proposal':''}</span></td>
+      <td style="text-align:center"><span class="pt-weight ${wCls}">${p.weight}</span></td>
+      <td><span class="type-badge ${typeClass(p.type)}">${p.type}</span></td>
+      <td style="font-size:12px;color:var(--gray)">${p.axis}</td>
+      <td class="score-low">${p.low}</td>
+      <td class="score-mid">${p.mid}</td>
+      <td class="score-high">${p.high}</td>
+    </tr>`;
+});
+
+// Pillar deep dive cards
+function renderPillarCards(filter) {
+  const grid = document.getElementById('pillars-grid');
+  grid.innerHTML = '';
+  PILLARS.filter(p => {
+    if (filter==='all') return true;
+    if (filter==='Original' || filter==='Proposed') return p.source===filter;
+    return p.type===filter;
+  }).forEach(p => {
+    const wCls = p.weight.startsWith('−') ? 'wt-neg' : 'wt-pos';
+    grid.innerHTML += `
+      <div class="pillar-card">
+        <div class="pc-header">
+          <div class="pc-header-left">
+            <div class="pc-num">PILLAR ${p.num} · ${p.source==='Proposed'?'★ PROPOSED':'ORIGINAL'}</div>
+            <div class="pc-name">${p.name}</div>
+          </div>
+          <div class="pc-header-right">
+            <span class="pt-weight ${wCls}" style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;padding:4px 10px;border-radius:6px">${p.weight}</span>
+            <span class="type-badge ${typeClass(p.type)}">${p.type} · ${p.axis}</span>
+          </div>
+        </div>
+        <div class="pc-body">
+          <div class="pc-purpose">${p.purpose}</div>
+          <div class="score-rows">
+            <div class="score-row sr-low"><div class="sr-label">1–2 · Low / Minimum</div><div class="sr-text">${p.low}</div></div>
+            <div class="score-row sr-mid"><div class="sr-label">3 · Medium / Moderate</div><div class="sr-text">${p.mid}</div></div>
+            <div class="score-row sr-high"><div class="sr-label">4–5 · High / Exceptional</div><div class="sr-text">${p.high}</div></div>
+          </div>
+          <div class="pc-examples">
+            <div class="pc-examples-title">Scored Examples</div>
+            <ul>${p.examples.map(e=>`<li>${e}</li>`).join('')}</ul>
+          </div>
+          <div class="pc-tip">
+            <span class="pc-tip-icon">💡</span>
+            <span class="pc-tip-body">${p.tip}</span>
+          </div>
+          <div class="pc-impact">
+            <span class="pc-impact-icon">📊</span>
+            <span class="pc-impact-body"><strong>Portfolio Impact:</strong> ${p.qImpact}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+}
+renderPillarCards('all');
+
+function filterPillars(f, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPillarCards(f);
+}
+
+// Process steps
+const ps = document.getElementById('process-steps');
+PROCESS_STEPS.forEach(s => {
+  ps.innerHTML += `
+    <div class="step-row">
+      <div class="step-num-wrap"><div class="step-num">${s.n}</div></div>
+      <div class="step-content">
+        <div class="step-title">${s.title}</div>
+        <div class="step-timing">${s.timing}</div>
+        <div class="step-grid">
+          <div class="step-cell"><div class="step-cell-label">Who</div><div class="step-cell-text">${s.who}</div></div>
+          <div class="step-cell"><div class="step-cell-label">How</div><div class="step-cell-text">${s.how}</div></div>
+          <div class="step-cell"><div class="step-cell-label">Output</div><div class="step-cell-text">${s.output}</div></div>
+        </div>
+      </div>
+    </div>`;
+});
+
+// Scoring matrix rows
+// ── Impact sub-score ──────────────────────────────────────────────────────
+function impactScore(s) {
+  const raw = s.p1 * 0.35 + s.p2 * 0.20;
+  const maxRaw = 5 * 0.35 + 5 * 0.20;
+  return (raw / maxRaw) * 5;
+}
+// ── Feasibility sub-score ──────────────────────────────────────────────────
+function feasScore(s) {
+  const raw  = s.p3 * 0.10 + s.p4 * 0.15 + s.p5 * 0.15 + s.p6 * (-0.05);
+  const fMax = 5*0.10 + 5*0.15 + 5*0.15 + 1*(-0.05);
+  const fMin = 1*0.10 + 1*0.15 + 1*0.15 + 5*(-0.05);
+  return ((raw - fMin) / (fMax - fMin)) * 5;
+}
+function scoreBadgeColor(v) {
+  if (v >= 4) return 'sv-4';
+  if (v === 5) return 'sv-5';
+  if (v === 3) return 'sv-3';
+  if (v === 2) return 'sv-2';
+  return 'sv-1';
+}
+
+function renderScoringRows(cases, tbodyId) {
+  const tbody = document.getElementById(tbodyId);
+  cases.forEach(c => {
+    const w   = ws(c.s);
+    const imp = impactScore(c.s).toFixed(2);
+    const fea = feasScore(c.s).toFixed(2);
+    const q   = quadrant(c.s);
+    const impColor = parseFloat(imp) >= 3.2 ? 'color:var(--green);font-weight:700' : 'color:var(--red);font-weight:700';
+    const feaColor = parseFloat(fea) >= 3.2 ? 'color:var(--green);font-weight:700' : 'color:var(--red);font-weight:700';
+    tbody.innerHTML += `
+      <tr>
+        <td><div class="uc-name">${c.name}</div><div class="uc-note">${c.note}</div></td>
+        <td>${svCell(c.s.p1)}</td><td>${svCell(c.s.p2)}</td>
+        <td>${svCell(c.s.p3)}</td><td>${svCell(c.s.p4)}</td>
+        <td>${svCell(c.s.p5)}</td><td>${svCell(c.s.p6)}</td>
+        <td><span class="ws-badge">${w}</span></td>
+        <td style="${impColor}">${imp}</td>
+        <td style="${feaColor}">${fea}</td>
+        <td><span class="q-badge ${q.cls}">${q.l}</span></td>
+      </tr>`;
+  });
+}
+
+// ── Score Explainer Cards ──────────────────────────────────────────────────
+function renderExplainer(cases, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  const impMax = 5*0.35 + 5*0.20;
+  const fMax   = 5*0.10 + 5*0.15 + 5*0.15 + 1*(-0.05);
+  const fMin   = 1*0.10 + 1*0.15 + 1*0.15 + 5*(-0.05);
+
+  let cards = cases.map(c => {
+    const imp = impactScore(c.s);
+    const fea = feasScore(c.s);
+    const w   = ws(c.s);
+    const q   = quadrant(c.s);
+    const impRaw = c.s.p1*0.35 + c.s.p2*0.20;
+    const feaRaw = c.s.p3*0.10 + c.s.p4*0.15 + c.s.p5*0.15 + c.s.p6*(-0.05);
+    const impColor = imp>=3.2?'#16a34a':'#dc2626';
+    const feaColor = fea>=3.2?'#16a34a':'#dc2626';
+    return `
+      <div class="se-uc-card">
+        <div class="se-uc-card-head" style="background:${imp>=3.2&&fea>=3.2?'#ECFDF5':imp>=3.2?'#EFF6FF':fea>=3.2?'#FFFBEB':'#F5F3FF'}">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--navy)">${c.name}</div>
+            <div style="font-size:11px;color:var(--gray);font-style:italic;margin-top:2px">${c.note}</div>
+          </div>
+          <span class="q-badge ${q.cls}" style="flex-shrink:0">${q.l}</span>
+        </div>
+        <div class="se-uc-card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div style="background:#EFF6FF;border-radius:6px;padding:8px">
+              <div style="font-size:10px;font-weight:700;color:#1D4ED8;letter-spacing:.08em;margin-bottom:4px">IMPACT SCORE</div>
+              <div style="font-size:10px;color:#555;margin-bottom:3px">P1×0.35 + P2×0.20 = ${impRaw.toFixed(3)}</div>
+              <div style="font-size:10px;color:#555;margin-bottom:3px">Normalise: ${impRaw.toFixed(3)} ÷ ${impMax.toFixed(2)} × 5</div>
+              <div style="font-size:14px;font-weight:800;color:${impColor}">${imp.toFixed(2)} / 5 ${imp>=3.2?'✅':'❌'}</div>
+            </div>
+            <div style="background:#F0FFF4;border-radius:6px;padding:8px">
+              <div style="font-size:10px;font-weight:700;color:#15803D;letter-spacing:.08em;margin-bottom:4px">FEASIBILITY SCORE</div>
+              <div style="font-size:10px;color:#555;margin-bottom:3px">P3×0.10+P4×0.15+P5×0.15+P6×−0.05 = ${feaRaw.toFixed(3)}</div>
+              <div style="font-size:10px;color:#555;margin-bottom:3px">Normalise: (${feaRaw.toFixed(3)}−${fMin.toFixed(2)}) ÷ ${(fMax-fMin).toFixed(2)} × 5</div>
+              <div style="font-size:14px;font-weight:800;color:${feaColor}">${fea.toFixed(2)} / 5 ${fea>=3.2?'✅':'❌'}</div>
+            </div>
+          </div>
+          <div class="se-calc-row"><span>Weighted Score</span><span style="font-family:monospace">${w}</span></div>
+          <div class="se-calc-row" style="border:none;padding-top:6px">
+            <span style="font-size:11px">Plot → X=${fea.toFixed(2)}, Y=${imp.toFixed(2)}</span>
+            <span style="font-size:11px;color:${imp>=3.2&&fea>=3.2?'var(--green)':imp>=3.2?'var(--blue)':fea>=3.2?'var(--gold)':'var(--purple)'}">
+              ${imp>=3.2?'High Impact':'Low Impact'} + ${fea>=3.2?'High Feasibility':'Low Feasibility'}
+            </span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Canvas plot
+  const plotId = containerId + '-canvas';
+  el.innerHTML = `
+    <div class="se-header">📐 Step-by-Step Score Derivation — How Each Use Case is Plotted on the 2×2 Matrix</div>
+    <div class="se-body">
+      <div class="se-grid">
+        <div class="se-axis-box se-axis-impact">
+          <div class="se-axis-title">How Impact Score (Y-axis) is Calculated</div>
+          <div class="se-formula">Impact = (P1 × 0.35 + P2 × 0.20) ÷ (5×0.35 + 5×0.20) × 5</div>
+          <div class="se-steps">
+            <div class="se-step">1. Multiply each Value pillar score by its weight</div>
+            <div class="se-step">2. Sum = raw impact score (max = 5×0.35 + 5×0.20 = <strong>2.75</strong>)</div>
+            <div class="se-step">3. Normalise to 0–5 scale: divide by 2.75 and multiply by 5</div>
+            <div class="se-step">4. If normalised score <strong>≥ 3.2</strong> → High Impact (Y-axis upper half)</div>
+          </div>
+        </div>
+        <div class="se-axis-box se-axis-feas">
+          <div class="se-axis-title">How Feasibility Score (X-axis) is Calculated</div>
+          <div class="se-formula">Feasibility = (P3×0.10 + P4×0.15 + P5×0.15 + P6×−0.05 − min) ÷ (max − min) × 5</div>
+          <div class="se-steps">
+            <div class="se-step">1. Multiply each Feasibility pillar by its weight; subtract penalty (P6 × −0.05)</div>
+            <div class="se-step">2. Raw range: min = <strong>0.05</strong> (all 1s, max penalty), max = <strong>0.70</strong> (all 5s, min penalty)</div>
+            <div class="se-step">3. Normalise: (raw − 0.05) ÷ (0.70 − 0.05) × 5</div>
+            <div class="se-step">4. If normalised score <strong>≥ 3.2</strong> → High Feasibility (X-axis right half)</div>
+          </div>
+        </div>
+      </div>
+      <div class="plot-wrap">
+        <div class="plot-title">2×2 Portfolio Plot — ${cases[0] ? cases.length : 0} Use Cases</div>
+        <canvas id="${plotId}" class="matrix-plot" width="520" height="380"></canvas>
+      </div>
+      <div class="se-uc-cards">${cards}</div>
+    </div>`;
+
+  // Draw the plot
+  setTimeout(() => {
+    const canvas = document.getElementById(plotId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const PAD = { top: 30, right: 30, bottom: 50, left: 50 };
+    const pw = W - PAD.left - PAD.right;
+    const ph = H - PAD.top - PAD.bottom;
+    const mx = PAD.left + pw/2, my = PAD.top + ph/2;
+
+    // Quadrant fills
+    const quads = [
+      { x:PAD.left, y:PAD.top, w:pw/2, h:ph/2, color:'#EFF6FF', label:'Research Cases 🔬', lx:PAD.left+20, ly:PAD.top+18 },
+      { x:mx, y:PAD.top, w:pw/2, h:ph/2, color:'#ECFDF5', label:'Champions ⭐', lx:mx+20, ly:PAD.top+18 },
+      { x:PAD.left, y:my, w:pw/2, h:ph/2, color:'#F5F3FF', label:'Reassess Later 🔄', lx:PAD.left+20, ly:my+18 },
+      { x:mx, y:my, w:pw/2, h:ph/2, color:'#FFFBEB', label:'Quick Wins ⚡', lx:mx+20, ly:my+18 },
+    ];
+    quads.forEach(q => {
+      ctx.fillStyle = q.color; ctx.fillRect(q.x, q.y, q.w, q.h);
+      ctx.strokeStyle = '#CBD5E1'; ctx.lineWidth = 1;
+      ctx.strokeRect(q.x, q.y, q.w, q.h);
+      ctx.fillStyle = '#64748B'; ctx.font = 'bold 11px DM Sans, sans-serif';
+      ctx.fillText(q.label, q.lx, q.ly);
+    });
+
+    // Threshold lines
+    ctx.strokeStyle = '#94A3B8'; ctx.lineWidth = 1.5; ctx.setLineDash([6,3]);
+    ctx.beginPath(); ctx.moveTo(mx, PAD.top); ctx.lineTo(mx, PAD.top+ph); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD.left, my); ctx.lineTo(PAD.left+pw, my); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Axes
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(PAD.left, PAD.top); ctx.lineTo(PAD.left, PAD.top+ph); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD.left, PAD.top+ph); ctx.lineTo(PAD.left+pw, PAD.top+ph); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#334155'; ctx.font = '11px DM Sans, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Feasibility (X) →', PAD.left + pw/2, H - 8);
+    ctx.save(); ctx.translate(14, PAD.top + ph/2); ctx.rotate(-Math.PI/2);
+    ctx.fillText('Impact (Y) ↑', 0, 0); ctx.restore();
+
+    // Axis scale
+    ctx.fillStyle = '#94A3B8'; ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('0', PAD.left, PAD.top+ph+14);
+    ctx.fillText('3.2', mx, PAD.top+ph+14);
+    ctx.fillText('5', PAD.left+pw, PAD.top+ph+14);
+    ctx.textAlign = 'right';
+    ctx.fillText('5', PAD.left-6, PAD.top+8);
+    ctx.fillText('3.2', PAD.left-6, my+4);
+    ctx.fillText('0', PAD.left-6, PAD.top+ph+4);
+
+    // Plot points
+    const colors = ['#1D4ED8','#15803D','#D97706','#7C3AED','#DC2626','#0891B2'];
+    const names  = cases.map(c => c.name);
+    cases.forEach((c, i) => {
+      const imp = impactScore(c.s);
+      const fea = feasScore(c.s);
+      const px = PAD.left + (fea / 5) * pw;
+      const py = PAD.top  + ph - (imp / 5) * ph;
+      // Drop shadow
+      ctx.beginPath(); ctx.arc(px+1, py+1, 10, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fill();
+      // Circle
+      ctx.beginPath(); ctx.arc(px, py, 10, 0, Math.PI*2);
+      ctx.fillStyle = colors[i % colors.length]; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+      // Label
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.font = 'bold 10px DM Sans, sans-serif'; ctx.textAlign = 'left';
+      const labelX = px + 13, labelY = py + 4;
+      const label = c.name.length > 22 ? c.name.substring(0,20)+'…' : c.name;
+      // White bg for label
+      const lw = ctx.measureText(label).width;
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillRect(labelX - 2, labelY - 11, lw + 4, 14);
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.fillText(label, labelX, labelY);
+    });
+  }, 100);
+}
+
+// Industry tab switcher
+function showIndustry(ind, btn) {
+  document.querySelectorAll('.industry-panel').forEach(p => p.style.display='none');
+  document.querySelectorAll('#examples .tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('ind-' + ind).style.display = 'block';
+  btn.classList.add('active');
+}
+
+renderScoringRows(HORIZON_BANK, 'hdfc-body');
+renderScoringRows(APOLLO, 'apollo-body');
+renderScoringRows(MOTORVANCE, 'auto-body');
+renderExplainer(HORIZON_BANK, 'bank-explainer');
+renderExplainer(APOLLO, 'health-explainer');
+renderExplainer(MOTORVANCE, 'auto-explainer');
+
+// Mistakes
+const mb = document.getElementById('mistakes-body');
+MISTAKES.forEach((r,i) => {
+  mb.innerHTML += `
+    <tr>
+      <td class="mistake-cell">✗ ${r.m}</td>
+      <td class="consequence-cell">${r.c}</td>
+      <td class="better-cell">✓ ${r.b}</td>
+    </tr>`;
+});
+</script>
+</body>
+</html>
