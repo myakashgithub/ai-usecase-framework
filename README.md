@@ -9,7 +9,7 @@ A comprehensive framework to evaluate and prioritise AI use cases across:
 - Real-world examples (Banking & Healthcare)
 
 ## Live Demo
-👉 https://YOUR-USERNAME.github.io/ai-usecase-framework/
+👉 https://myakashgithub.github.io/ai-usecase-framework/
 
 ## Why this matters
 AI programs fail not because of weak models  
